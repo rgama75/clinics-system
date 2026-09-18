@@ -191,14 +191,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      is_org_admin: {
-        Args: { _organization_id: string; _user_id?: string }
-        Returns: boolean
-      }
-      is_org_member: {
-        Args: { _organization_id: string; _user_id?: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       app_role: "admin" | "professional" | "receptionist"
