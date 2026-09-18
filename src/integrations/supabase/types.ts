@@ -14,16 +14,195 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      organization_members: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          created_by: string
+          document: string
+          id: string
+          legal_name: string
+          phone: string
+          specialty: Database["public"]["Enums"]["clinic_specialty"]
+          trade_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          document: string
+          id?: string
+          legal_name: string
+          phone: string
+          specialty: Database["public"]["Enums"]["clinic_specialty"]
+          trade_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          document?: string
+          id?: string
+          legal_name?: string
+          phone?: string
+          specialty?: Database["public"]["Enums"]["clinic_specialty"]
+          trade_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string
+          id: string
+          job_title: string | null
+          phone: string | null
+          preferences: Json
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name: string
+          id: string
+          job_title?: string | null
+          phone?: string | null
+          preferences?: Json
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          job_title?: string | null
+          phone?: string | null
+          preferences?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      units: {
+        Row: {
+          active: boolean
+          city: string | null
+          code: string
+          complement: string | null
+          created_at: string
+          id: string
+          is_headquarters: boolean
+          name: string
+          neighborhood: string | null
+          number: string | null
+          organization_id: string
+          phone: string | null
+          postal_code: string | null
+          state: string | null
+          street: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          city?: string | null
+          code: string
+          complement?: string | null
+          created_at?: string
+          id?: string
+          is_headquarters?: boolean
+          name: string
+          neighborhood?: string | null
+          number?: string | null
+          organization_id: string
+          phone?: string | null
+          postal_code?: string | null
+          state?: string | null
+          street?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          city?: string | null
+          code?: string
+          complement?: string | null
+          created_at?: string
+          id?: string
+          is_headquarters?: boolean
+          name?: string
+          neighborhood?: string | null
+          number?: string | null
+          organization_id?: string
+          phone?: string | null
+          postal_code?: string | null
+          state?: string | null
+          street?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "units_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_org_admin: {
+        Args: { _organization_id: string; _user_id?: string }
+        Returns: boolean
+      }
+      is_org_member: {
+        Args: { _organization_id: string; _user_id?: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "professional" | "receptionist"
+      clinic_specialty: "aesthetics" | "dentistry" | "medicine"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +329,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "professional", "receptionist"],
+      clinic_specialty: ["aesthetics", "dentistry", "medicine"],
+    },
   },
 } as const
