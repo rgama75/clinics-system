@@ -60,12 +60,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             >
             Tentar novamente
           </Button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            Ir ao início
-          </a>
+          <Button asChild variant="outline">
+            <Link to="/">Ir ao início</Link>
+          </Button>
         </div>
       </div>
     </div>
