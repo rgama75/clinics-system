@@ -7,6 +7,7 @@ import { AppShell } from "@/components/clinicflow/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { modules } from "@/lib/clinicflow";
 import { useOrganizationId } from "@/hooks/use-organization-id";
+import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -138,13 +139,7 @@ function Financeiro() {
       setOpen(false);
       await loadItems(orgId);
     } catch (err) {
-      toast.error(
-        err instanceof z.ZodError
-          ? (err.issues[0]?.message ?? "Revise os campos obrigatórios.")
-          : err instanceof Error
-            ? err.message
-            : "Não foi possível criar o lançamento.",
-      );
+      toast.error(getErrorMessage(err, "Não foi possível criar o lançamento."));
     } finally {
       setBusy(false);
     }

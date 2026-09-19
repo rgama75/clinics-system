@@ -6,6 +6,7 @@ import { z } from "zod";
 import { AppShell } from "@/components/clinicflow/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { modules } from "@/lib/clinicflow";
+import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -145,13 +146,7 @@ function Agenda() {
       setOpen(false);
       await loadAppointments(orgId);
     } catch (err) {
-      toast.error(
-        err instanceof z.ZodError
-          ? (err.issues[0]?.message ?? "Revise os campos obrigatórios.")
-          : err instanceof Error
-            ? err.message
-            : "Não foi possível criar o agendamento.",
-      );
+      toast.error(getErrorMessage(err, "Não foi possível criar o agendamento."));
     } finally {
       setBusy(false);
     }
