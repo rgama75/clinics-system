@@ -32,7 +32,7 @@ export function AppShell({ children, title, eyebrow }: { children: ReactNode; ti
         supabase.from("profiles").select("full_name").eq("id", auth.user.id).maybeSingle(),
         supabase.from("organizations").select("id, trade_name").order("created_at"),
       ]);
-      setUserName(profile?.full_name ?? auth.user.user_metadata?.full_name ?? "Minha conta");
+      setUserName(profile?.full_name ?? auth.user.user_metadata?.["full_name"] ?? "Minha conta");
       const nextOrgs = organizations ?? [];
       setOrgs(nextOrgs);
       const stored = window.localStorage.getItem("clinicflow-org");
@@ -52,7 +52,6 @@ export function AppShell({ children, title, eyebrow }: { children: ReactNode; ti
   }, [orgId]);
 
   const initials = useMemo(() => userName.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase(), [userName]);
-  const nav = (slug: string) => slug === "dashboard" ? "/dashboard" : `/${slug}`;
   const signOut = async () => { await supabase.auth.signOut(); await navigate({ to: "/auth", replace: true }); };
 
   const sidebar = <div className="flex h-full flex-col">
@@ -63,9 +62,9 @@ export function AppShell({ children, title, eyebrow }: { children: ReactNode; ti
     <nav className="flex-1 overflow-y-auto px-3 py-5">
       <NavItem item={dashboardItem} href="/dashboard" active={pathname === "/dashboard"} />
       <p className="mb-2 mt-6 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-sidebar-foreground/40">Operação</p>
-      {modules.map((item) => <NavItem key={item.slug} item={item} href={nav(item.slug)} active={pathname === nav(item.slug)} />)}
+      {modules.map((item) => <ModuleNavItem key={item.slug} item={item} active={pathname === `/${item.slug}`} />)}
       <p className="mb-2 mt-6 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-sidebar-foreground/40">Administração</p>
-      {administration.map((item) => <NavItem key={item.slug} item={item} href={nav(item.slug)} active={pathname === nav(item.slug)} />)}
+      {administration.map((item) => <NavItem key={item.slug} item={item} href={`/${item.slug}`} active={pathname === `/${item.slug}`} />)}
     </nav>
     <div className="border-t border-sidebar-border p-3"><div className="rounded-md bg-sidebar-accent px-3 py-3 text-xs leading-relaxed text-sidebar-accent-foreground"><b>ClinicFlow AI</b><br/><span className="opacity-65">Ambiente protegido da sua clínica</span></div></div>
   </div>;
@@ -87,6 +86,11 @@ export function AppShell({ children, title, eyebrow }: { children: ReactNode; ti
       <main className="px-4 py-7 md:px-7 lg:px-9"><div className="mx-auto max-w-[1480px]"><div className="mb-7"><p className="mb-1 text-xs font-bold uppercase tracking-[0.13em] text-primary">{eyebrow ?? "ClinicFlow AI"}</p><h1 className="font-display text-2xl font-semibold md:text-3xl">{title}</h1></div>{children}</div></main>
     </div>
   </div>;
+}
+
+function ModuleNavItem({ item, active }: { item: { slug: string; label: string; icon: React.ComponentType<{className?: string}> }; active: boolean }) {
+  const Icon = item.icon;
+  return <Link to="/$module" params={{ module: item.slug }} className={cn("mb-1 flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors", active ? "bg-sidebar-primary text-sidebar-primary-foreground" : "text-sidebar-foreground/68 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground")}><Icon className="size-4"/><span>{item.label}</span></Link>;
 }
 
 function NavItem({ item, href, active }: { item: { label: string; icon: React.ComponentType<{className?: string}> }; href: string; active: boolean }) {
