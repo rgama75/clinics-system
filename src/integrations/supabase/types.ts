@@ -427,38 +427,56 @@ export type Database = {
       patients: {
         Row: {
           birth_date: string | null
+          city: string | null
+          complement: string | null
           created_at: string
           created_by: string
           email: string | null
           full_name: string
           id: string
           notes: string | null
+          number: string | null
           organization_id: string
           phone: string | null
+          postal_code: string | null
+          state: string | null
+          street: string | null
           updated_at: string
         }
         Insert: {
           birth_date?: string | null
+          city?: string | null
+          complement?: string | null
           created_at?: string
           created_by: string
           email?: string | null
           full_name: string
           id?: string
           notes?: string | null
+          number?: string | null
           organization_id: string
           phone?: string | null
+          postal_code?: string | null
+          state?: string | null
+          street?: string | null
           updated_at?: string
         }
         Update: {
           birth_date?: string | null
+          city?: string | null
+          complement?: string | null
           created_at?: string
           created_by?: string
           email?: string | null
           full_name?: string
           id?: string
           notes?: string | null
+          number?: string | null
           organization_id?: string
           phone?: string | null
+          postal_code?: string | null
+          state?: string | null
+          street?: string | null
           updated_at?: string
         }
         Relationships: [
