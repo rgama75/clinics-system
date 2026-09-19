@@ -6,6 +6,7 @@ import { z } from "zod";
 import { AppShell } from "@/components/clinicflow/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganizationId } from "@/hooks/use-organization-id";
+import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -99,13 +100,7 @@ function Equipe() {
       setForm(emptyForm);
       setOpen(false);
     } catch (err) {
-      toast.error(
-        err instanceof z.ZodError
-          ? (err.issues[0]?.message ?? "Revise os campos obrigatórios.")
-          : err instanceof Error
-            ? err.message
-            : "Não foi possível enviar o convite.",
-      );
+      toast.error(getErrorMessage(err, "Não foi possível enviar o convite."));
     } finally {
       setBusy(false);
     }

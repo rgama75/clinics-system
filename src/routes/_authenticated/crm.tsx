@@ -7,6 +7,8 @@ import { AppShell } from "@/components/clinicflow/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { modules } from "@/lib/clinicflow";
 import { useOrganizationId } from "@/hooks/use-organization-id";
+import { formatPhoneBR } from "@/lib/format";
+import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -141,13 +143,7 @@ function Crm() {
       setOpen(false);
       await loadItems(orgId);
     } catch (err) {
-      toast.error(
-        err instanceof z.ZodError
-          ? (err.issues[0]?.message ?? "Revise os campos obrigatórios.")
-          : err instanceof Error
-            ? err.message
-            : "Não foi possível criar o contato.",
-      );
+      toast.error(getErrorMessage(err, "Não foi possível criar o contato."));
     } finally {
       setBusy(false);
     }
@@ -196,8 +192,8 @@ function Crm() {
                     id="phone"
                     className="mt-2"
                     value={form.phone}
-                    onChange={(e) => set("phone", e.target.value)}
-                    maxLength={30}
+                    onChange={(e) => set("phone", formatPhoneBR(e.target.value))}
+                    maxLength={15}
                   />
                 </div>
                 <div>
