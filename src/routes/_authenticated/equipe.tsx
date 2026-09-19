@@ -99,12 +99,17 @@ function Equipe() {
       if (!orgId) throw new Error("Nenhuma clínica selecionada.");
       const { data: invitation, error } = await supabase
         .from("organization_invitations")
-        .insert({
-          organization_id: orgId,
-          email: v.email,
-          role: v.role,
-          invited_by: auth.user.id,
-        })
+        .upsert(
+          {
+            organization_id: orgId,
+            email: v.email,
+            role: v.role,
+            invited_by: auth.user.id,
+            status: "pending",
+            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+          { onConflict: "organization_id,email" },
+        )
         .select("id")
         .single();
       if (error) throw error;
