@@ -130,6 +130,22 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("clinicflow-theme");
+      if (!saved) return;
+      const effective =
+        saved === "system"
+          ? window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light"
+          : saved;
+      document.documentElement.classList.toggle("dark", effective === "dark");
+    } catch {
+      // ignore: localStorage may be unavailable
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
