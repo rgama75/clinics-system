@@ -7,7 +7,7 @@ import { AppShell } from "@/components/clinicflow/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { modules } from "@/lib/clinicflow";
 import { useOrganizationId } from "@/hooks/use-organization-id";
-import { formatPhoneBR } from "@/lib/format";
+import { formatPhoneBR, formatCEP } from "@/lib/format";
 import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,18 +60,61 @@ const schema = z.object({
   phone: z.string().trim().max(30).optional(),
   email: z.string().trim().max(255).optional(),
   birth_date: z.string().optional(),
+  postal_code: z.string().trim().max(12).optional(),
+  street: z.string().trim().max(160).optional(),
+  number: z.string().trim().max(20).optional(),
+  complement: z.string().trim().max(80).optional(),
+  city: z.string().trim().max(80).optional(),
+  state: z.string().trim().max(2).optional(),
   notes: z.string().trim().max(2000).optional(),
 });
 
-const emptyForm = { full_name: "", phone: "", email: "", birth_date: "", notes: "" };
+const emptyForm = {
+  full_name: "",
+  phone: "",
+  email: "",
+  birth_date: "",
+  postal_code: "",
+  street: "",
+  number: "",
+  complement: "",
+  city: "",
+  state: "",
+  notes: "",
+};
 
 function Pacientes() {
   const orgId = useOrganizationId();
   const [items, setItems] = useState<Patient[]>([]);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const set = (k: keyof typeof emptyForm, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  const lookupCep = async (cep: string) => {
+    const digits = cep.replace(/\D/g, "");
+    if (digits.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await res.json();
+      if (data.erro) {
+        toast.error("CEP não encontrado.");
+        return;
+      }
+      setForm((f) => ({
+        ...f,
+        street: data.logradouro || f.street,
+        city: data.localidade || f.city,
+        state: data.uf || f.state,
+      }));
+    } catch {
+      toast.error("Não foi possível buscar o CEP.");
+    } finally {
+      setCepLoading(false);
+    }
+  };
 
   const loadItems = async (organizationId: string) => {
     const { data } = await supabase
@@ -99,6 +142,12 @@ function Pacientes() {
         phone: v.phone || null,
         email: v.email || null,
         birth_date: v.birth_date || null,
+        postal_code: v.postal_code || null,
+        street: v.street || null,
+        number: v.number || null,
+        complement: v.complement || null,
+        city: v.city || null,
+        state: v.state ? v.state.toUpperCase() : null,
         notes: v.notes || null,
         created_by: auth.user.id,
       });
@@ -182,6 +231,77 @@ function Pacientes() {
                   value={form.birth_date}
                   onChange={(e) => set("birth_date", e.target.value)}
                 />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label htmlFor="postal_code">CEP</Label>
+                  <Input
+                    id="postal_code"
+                    className="mt-2"
+                    value={form.postal_code}
+                    onChange={(e) => {
+                      const v = formatCEP(e.target.value);
+                      set("postal_code", v);
+                      if (v.replace(/\D/g, "").length === 8) void lookupCep(v);
+                    }}
+                    maxLength={9}
+                    placeholder={cepLoading ? "Buscando..." : undefined}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label htmlFor="street">Rua</Label>
+                  <Input
+                    id="street"
+                    className="mt-2"
+                    value={form.street}
+                    onChange={(e) => set("street", e.target.value)}
+                    maxLength={160}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="number">Número</Label>
+                  <Input
+                    id="number"
+                    className="mt-2"
+                    value={form.number}
+                    onChange={(e) => set("number", e.target.value)}
+                    maxLength={20}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="complement">Complemento</Label>
+                  <Input
+                    id="complement"
+                    className="mt-2"
+                    value={form.complement}
+                    onChange={(e) => set("complement", e.target.value)}
+                    maxLength={80}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2">
+                  <Label htmlFor="city">Cidade</Label>
+                  <Input
+                    id="city"
+                    className="mt-2"
+                    value={form.city}
+                    onChange={(e) => set("city", e.target.value)}
+                    maxLength={80}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="state">UF</Label>
+                  <Input
+                    id="state"
+                    className="mt-2"
+                    value={form.state}
+                    onChange={(e) => set("state", e.target.value)}
+                    maxLength={2}
+                  />
+                </div>
               </div>
               <div>
                 <Label htmlFor="notes">Observações</Label>
