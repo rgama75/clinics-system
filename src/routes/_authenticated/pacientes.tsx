@@ -60,6 +60,7 @@ type Patient = {
   city: string | null;
   state: string | null;
   notes: string | null;
+  created_at: string;
 };
 
 const schema = z.object({
@@ -159,7 +160,7 @@ function Pacientes() {
     const { data } = await supabase
       .from("patients")
       .select(
-        "id, full_name, phone, email, birth_date, postal_code, street, number, complement, city, state, notes",
+        "id, full_name, phone, email, birth_date, postal_code, street, number, complement, city, state, notes, created_at",
       )
       .eq("organization_id", organizationId)
       .order("full_name", { ascending: true });
@@ -415,6 +416,7 @@ function Pacientes() {
               <TableHead>Telefone</TableHead>
               <TableHead>E-mail</TableHead>
               <TableHead>Nascimento</TableHead>
+              <TableHead>Cliente desde</TableHead>
               <TableHead className="w-12" />
             </TableRow>
           </TableHeader>
@@ -439,6 +441,9 @@ function Pacientes() {
                   {p.birth_date
                     ? new Date(`${p.birth_date}T00:00:00`).toLocaleDateString("pt-BR")
                     : "—"}
+                </TableCell>
+                <TableCell className="py-1 text-sm text-muted-foreground">
+                  {new Date(p.created_at).toLocaleDateString("pt-BR")}
                 </TableCell>
                 <TableCell className="py-1">
                   <Button
