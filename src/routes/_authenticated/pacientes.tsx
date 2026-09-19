@@ -421,26 +421,26 @@ function Pacientes() {
           <TableBody>
             {visibleItems.map((p) => (
               <TableRow key={p.id}>
-                <TableCell className="py-1.5">
+                <TableCell className="py-1">
                   <div className="flex items-center gap-3">
-                    <div className="grid size-8 place-items-center rounded-full bg-primary/10 text-primary">
-                      <UserRound className="size-3.5" />
+                    <div className="grid size-7 place-items-center rounded-full bg-primary/10 text-primary">
+                      <UserRound className="size-3" />
                     </div>
                     <p className="font-medium">{p.full_name}</p>
                   </div>
                 </TableCell>
-                <TableCell className="py-1.5 text-sm text-muted-foreground">
+                <TableCell className="py-1 text-sm text-muted-foreground">
                   {p.phone ?? "—"}
                 </TableCell>
-                <TableCell className="py-1.5 text-sm text-muted-foreground">
+                <TableCell className="py-1 text-sm text-muted-foreground">
                   {p.email ?? "—"}
                 </TableCell>
-                <TableCell className="py-1.5 text-sm text-muted-foreground">
+                <TableCell className="py-1 text-sm text-muted-foreground">
                   {p.birth_date
                     ? new Date(`${p.birth_date}T00:00:00`).toLocaleDateString("pt-BR")
                     : "—"}
                 </TableCell>
-                <TableCell className="py-1.5">
+                <TableCell className="py-1">
                   <Button
                     variant="ghost"
                     size="icon"
