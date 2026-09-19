@@ -64,7 +64,7 @@ export function AppShell({ children, title, eyebrow }: { children: ReactNode; ti
       <p className="mb-2 mt-6 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-sidebar-foreground/40">Operação</p>
       {modules.map((item) => <ModuleNavItem key={item.slug} item={item} active={pathname === `/${item.slug}`} />)}
       <p className="mb-2 mt-6 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-sidebar-foreground/40">Administração</p>
-      {administration.map((item) => <NavItem key={item.slug} item={item} href={nav(item.slug)} active={pathname === nav(item.slug)} />)}
+      {administration.map((item) => <NavItem key={item.slug} item={item} href={`/${item.slug}`} active={pathname === `/${item.slug}`} />)}
     </nav>
     <div className="border-t border-sidebar-border p-3"><div className="rounded-md bg-sidebar-accent px-3 py-3 text-xs leading-relaxed text-sidebar-accent-foreground"><b>ClinicFlow AI</b><br/><span className="opacity-65">Ambiente protegido da sua clínica</span></div></div>
   </div>;
