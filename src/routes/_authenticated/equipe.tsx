@@ -53,13 +53,21 @@ type Member = { id: string; role: string; status: string; user_id: string };
 
 const schema = z.object({
   email: z.string().trim().email("Informe um e-mail válido.").max(255),
-  role: z.enum(["admin", "professional", "receptionist"]),
+  role: z.enum(["admin", "manager", "professional", "financial", "receptionist"]),
 });
 
-const emptyForm = { email: "", role: "professional" as "admin" | "professional" | "receptionist" };
+type Role = "admin" | "manager" | "professional" | "financial" | "receptionist";
+
+const emptyForm = { email: "", role: "professional" as Role };
 
 const roleLabel = (r: string) =>
-  ({ admin: "Administrador", professional: "Profissional", receptionist: "Recepcionista" })[r] ?? r;
+  ({
+    admin: "Administrador",
+    manager: "Gerente",
+    professional: "Profissional",
+    financial: "Financeiro",
+    receptionist: "Recepcionista",
+  })[r] ?? r;
 
 function Equipe() {
   const orgId = useOrganizationId();
@@ -151,7 +159,9 @@ function Equipe() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin">Administrador</SelectItem>
+                    <SelectItem value="manager">Gerente</SelectItem>
                     <SelectItem value="professional">Profissional</SelectItem>
+                    <SelectItem value="financial">Financeiro</SelectItem>
                     <SelectItem value="receptionist">Recepcionista</SelectItem>
                   </SelectContent>
                 </Select>
