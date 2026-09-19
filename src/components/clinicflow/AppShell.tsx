@@ -32,7 +32,7 @@ export function AppShell({ children, title, eyebrow }: { children: ReactNode; ti
         supabase.from("profiles").select("full_name").eq("id", auth.user.id).maybeSingle(),
         supabase.from("organizations").select("id, trade_name").order("created_at"),
       ]);
-      setUserName(profile?.full_name ?? auth.user.user_metadata?.full_name ?? "Minha conta");
+      setUserName(profile?.full_name ?? auth.user.user_metadata?.["full_name"] ?? "Minha conta");
       const nextOrgs = organizations ?? [];
       setOrgs(nextOrgs);
       const stored = window.localStorage.getItem("clinicflow-org");
