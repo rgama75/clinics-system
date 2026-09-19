@@ -30,6 +30,7 @@ import { Route as AuthenticatedPropostasRouteImport } from './routes/_authentica
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
 import { Route as AuthenticatedUnidadesRouteImport } from './routes/_authenticated/unidades'
 import { Route as AuthenticatedVendasRouteImport } from './routes/_authenticated/vendas'
+import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -137,6 +138,11 @@ const AuthenticatedVendasRoute = AuthenticatedVendasRouteImport.update({
   path: '/vendas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ConviteTokenRoute = ConviteTokenRouteImport.update({
+  id: '/convite/$token',
+  path: '/convite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
   '/vendas': typeof AuthenticatedVendasRoute
+  '/convite/$token': typeof ConviteTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
   '/vendas': typeof AuthenticatedVendasRoute
+  '/convite/$token': typeof ConviteTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/unidades': typeof AuthenticatedUnidadesRoute
   '/_authenticated/vendas': typeof AuthenticatedVendasRoute
+  '/convite/$token': typeof ConviteTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -229,6 +238,7 @@ export interface FileRouteTypes {
     | '/relatorios'
     | '/unidades'
     | '/vendas'
+    | '/convite/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -251,6 +261,7 @@ export interface FileRouteTypes {
     | '/relatorios'
     | '/unidades'
     | '/vendas'
+    | '/convite/$token'
   id:
     | '__root__'
     | '/'
@@ -274,6 +285,7 @@ export interface FileRouteTypes {
     | '/_authenticated/relatorios'
     | '/_authenticated/unidades'
     | '/_authenticated/vendas'
+    | '/convite/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -281,6 +293,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ConviteTokenRoute: typeof ConviteTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -432,6 +445,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVendasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/convite/$token': {
+      id: '/convite/$token'
+      path: '/convite/$token'
+      fullPath: '/convite/$token'
+      preLoaderRoute: typeof ConviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -483,6 +503,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ConviteTokenRoute: ConviteTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

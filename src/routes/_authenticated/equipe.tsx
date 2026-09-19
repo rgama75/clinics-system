@@ -97,14 +97,27 @@ function Equipe() {
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) throw new Error("Sessão expirada.");
       if (!orgId) throw new Error("Nenhuma clínica selecionada.");
-      const { error } = await supabase.from("organization_invitations").insert({
-        organization_id: orgId,
-        email: v.email,
-        role: v.role,
-        invited_by: auth.user.id,
-      });
+      const { data: invitation, error } = await supabase
+        .from("organization_invitations")
+        .insert({
+          organization_id: orgId,
+          email: v.email,
+          role: v.role,
+          invited_by: auth.user.id,
+        })
+        .select("id")
+        .single();
       if (error) throw error;
-      toast.success("Convite enviado com sucesso.");
+      const { error: fnError } = await supabase.functions.invoke("send-invite-email", {
+        body: { invitationId: invitation.id, siteUrl: window.location.origin },
+      });
+      if (fnError) {
+        toast.warning(
+          "Convite registrado, mas o e-mail não pôde ser enviado. Tente reenviar mais tarde.",
+        );
+      } else {
+        toast.success("Convite enviado com sucesso.");
+      }
       setForm(emptyForm);
       setOpen(false);
     } catch (err) {
