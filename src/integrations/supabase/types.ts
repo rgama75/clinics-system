@@ -14,6 +14,254 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          created_at: string
+          created_by: string
+          ends_at: string
+          id: string
+          notes: string | null
+          organization_id: string
+          patient_name: string
+          procedure: string | null
+          professional_name: string | null
+          starts_at: string
+          status: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          ends_at: string
+          id?: string
+          notes?: string | null
+          organization_id: string
+          patient_name: string
+          procedure?: string | null
+          professional_name?: string | null
+          starts_at: string
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          ends_at?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          patient_name?: string
+          procedure?: string | null
+          professional_name?: string | null
+          starts_at?: string
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automations: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string
+          id: string
+          message: string | null
+          name: string
+          organization_id: string
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by: string
+          id?: string
+          message?: string | null
+          name: string
+          organization_id: string
+          trigger_type?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string
+          id?: string
+          message?: string | null
+          name?: string
+          organization_id?: string
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_contacts: {
+        Row: {
+          created_at: string
+          created_by: string
+          email: string | null
+          id: string
+          name: string
+          next_contact_at: string | null
+          notes: string | null
+          organization_id: string
+          phone: string | null
+          stage: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          email?: string | null
+          id?: string
+          name: string
+          next_contact_at?: string | null
+          notes?: string | null
+          organization_id: string
+          phone?: string | null
+          stage?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          id?: string
+          name?: string
+          next_contact_at?: string | null
+          notes?: string | null
+          organization_id?: string
+          phone?: string | null
+          stage?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_contacts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluations: {
+        Row: {
+          created_at: string
+          created_by: string
+          evaluated_at: string
+          evaluation_type: string | null
+          id: string
+          organization_id: string
+          patient_name: string
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          evaluated_at?: string
+          evaluation_type?: string | null
+          id?: string
+          organization_id: string
+          patient_name: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          evaluated_at?: string
+          evaluation_type?: string | null
+          id?: string
+          organization_id?: string
+          patient_name?: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_entries: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string
+          description: string
+          due_date: string | null
+          entry_type: string
+          id: string
+          organization_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by: string
+          description: string
+          due_date?: string | null
+          entry_type: string
+          id?: string
+          organization_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string
+          description?: string
+          due_date?: string | null
+          entry_type?: string
+          id?: string
+          organization_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_entries_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_invitations: {
         Row: {
           created_at: string
@@ -24,6 +272,7 @@ export type Database = {
           organization_id: string
           role: Database["public"]["Enums"]["app_role"]
           status: string
+          token: string
           updated_at: string
         }
         Insert: {
@@ -35,6 +284,7 @@ export type Database = {
           organization_id: string
           role?: Database["public"]["Enums"]["app_role"]
           status?: string
+          token?: string
           updated_at?: string
         }
         Update: {
@@ -46,6 +296,7 @@ export type Database = {
           organization_id?: string
           role?: Database["public"]["Enums"]["app_role"]
           status?: string
+          token?: string
           updated_at?: string
         }
         Relationships: [
@@ -132,6 +383,118 @@ export type Database = {
         }
         Relationships: []
       }
+      packages: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          organization_id: string
+          price: number | null
+          sessions_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          price?: number | null
+          sessions_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          price?: number | null
+          sessions_count?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "packages_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patients: {
+        Row: {
+          birth_date: string | null
+          city: string | null
+          complement: string | null
+          created_at: string
+          created_by: string
+          email: string | null
+          full_name: string
+          id: string
+          notes: string | null
+          number: string | null
+          organization_id: string
+          phone: string | null
+          postal_code: string | null
+          state: string | null
+          street: string | null
+          updated_at: string
+        }
+        Insert: {
+          birth_date?: string | null
+          city?: string | null
+          complement?: string | null
+          created_at?: string
+          created_by: string
+          email?: string | null
+          full_name: string
+          id?: string
+          notes?: string | null
+          number?: string | null
+          organization_id: string
+          phone?: string | null
+          postal_code?: string | null
+          state?: string | null
+          street?: string | null
+          updated_at?: string
+        }
+        Update: {
+          birth_date?: string | null
+          city?: string | null
+          complement?: string | null
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          notes?: string | null
+          number?: string | null
+          organization_id?: string
+          phone?: string | null
+          postal_code?: string | null
+          state?: string | null
+          street?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patients_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -164,6 +527,200 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      proposals: {
+        Row: {
+          amount: number | null
+          client_name: string
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          organization_id: string
+          status: string
+          title: string
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          amount?: number | null
+          client_name: string
+          created_at?: string
+          created_by: string
+          id?: string
+          notes?: string | null
+          organization_id: string
+          status?: string
+          title: string
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          amount?: number | null
+          client_name?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposals_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reports: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          organization_id: string
+          period_end: string | null
+          period_start: string | null
+          report_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          notes?: string | null
+          organization_id: string
+          period_end?: string | null
+          period_start?: string | null
+          report_type?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          period_end?: string | null
+          period_start?: string | null
+          report_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales: {
+        Row: {
+          amount: number
+          client_name: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          organization_id: string
+          sold_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          client_name: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          organization_id: string
+          sold_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          client_name?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          organization_id?: string
+          sold_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          amount: number | null
+          billing_cycle: string
+          client_name: string
+          created_at: string
+          created_by: string
+          id: string
+          organization_id: string
+          plan_name: string
+          started_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          billing_cycle?: string
+          client_name: string
+          created_at?: string
+          created_by: string
+          id?: string
+          organization_id: string
+          plan_name: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          billing_cycle?: string
+          client_name?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          organization_id?: string
+          plan_name?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       units: {
         Row: {
@@ -235,10 +792,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      accept_invitation: { Args: { _token: string }; Returns: string }
+      get_invitation_by_token: {
+        Args: { _token: string }
+        Returns: {
+          email: string
+          expires_at: string
+          organization_name: string
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+        }[]
+      }
     }
     Enums: {
-      app_role: "admin" | "professional" | "receptionist"
+      app_role:
+        | "admin"
+        | "professional"
+        | "receptionist"
+        | "manager"
+        | "financial"
       clinic_specialty: "aesthetics" | "dentistry" | "medicine"
     }
     CompositeTypes: {
@@ -367,7 +939,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "professional", "receptionist"],
+      app_role: [
+        "admin",
+        "professional",
+        "receptionist",
+        "manager",
+        "financial",
+      ],
       clinic_specialty: ["aesthetics", "dentistry", "medicine"],
     },
   },
