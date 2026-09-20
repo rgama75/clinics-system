@@ -66,6 +66,10 @@ const emptyForm = { patient_name: "", evaluation_type: "", summary: "", evaluate
 function Avaliacoes() {
   const orgId = useOrganizationId();
   const [items, setItems] = useState<Evaluation[]>([]);
+  const [patients, setPatients] = useState<{ id: string; full_name: string }[]>([]);
+  const [procedures, setProcedures] = useState<{ id: string; name: string }[]>([]);
+  const [patientSuggestOpen, setPatientSuggestOpen] = useState(false);
+  const [procedureSuggestOpen, setProcedureSuggestOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -80,9 +84,43 @@ function Avaliacoes() {
     setItems(data ?? []);
   };
 
+  const loadPatients = async (organizationId: string) => {
+    const { data } = await supabase
+      .from("patients")
+      .select("id, full_name")
+      .eq("organization_id", organizationId)
+      .order("full_name", { ascending: true });
+    setPatients(data ?? []);
+  };
+
+  const loadProcedures = async (organizationId: string) => {
+    const { data } = await supabase
+      .from("procedures")
+      .select("id, name")
+      .eq("organization_id", organizationId)
+      .order("name", { ascending: true });
+    setProcedures(data ?? []);
+  };
+
   useEffect(() => {
-    if (orgId) void loadItems(orgId);
+    if (orgId) {
+      void loadItems(orgId);
+      void loadPatients(orgId);
+      void loadProcedures(orgId);
+    }
   }, [orgId]);
+
+  const patientMatches = form.patient_name.trim()
+    ? patients
+        .filter((p) => p.full_name.toLowerCase().includes(form.patient_name.trim().toLowerCase()))
+        .slice(0, 6)
+    : [];
+
+  const procedureMatches = form.evaluation_type.trim()
+    ? procedures
+        .filter((p) => p.name.toLowerCase().includes(form.evaluation_type.trim().toLowerCase()))
+        .slice(0, 6)
+    : [];
 
   const submit = async () => {
     setBusy(true);
@@ -136,28 +174,78 @@ function Avaliacoes() {
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4">
-              <div>
+              <div className="relative">
                 <Label htmlFor="patient_name">Paciente</Label>
                 <Input
                   id="patient_name"
                   className="mt-2"
                   value={form.patient_name}
-                  onChange={(e) => set("patient_name", e.target.value)}
+                  onChange={(e) => {
+                    set("patient_name", e.target.value);
+                    setPatientSuggestOpen(true);
+                  }}
+                  onFocus={() => setPatientSuggestOpen(true)}
+                  onBlur={() => setTimeout(() => setPatientSuggestOpen(false), 150)}
+                  autoComplete="off"
                   maxLength={160}
                   required
                 />
+                {patientSuggestOpen && patientMatches.length > 0 && (
+                  <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border bg-popover shadow-md">
+                    {patientMatches.map((p) => (
+                      <li key={p.id}>
+                        <button
+                          type="button"
+                          className="block w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            set("patient_name", p.full_name);
+                            setPatientSuggestOpen(false);
+                          }}
+                        >
+                          {p.full_name}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="evaluation_type">Tipo</Label>
+                <div className="relative">
+                  <Label htmlFor="evaluation_type">Procedimento</Label>
                   <Input
                     id="evaluation_type"
                     className="mt-2"
-                    placeholder="Ex: Avaliação facial"
+                    placeholder="Digite para buscar um procedimento"
                     value={form.evaluation_type}
-                    onChange={(e) => set("evaluation_type", e.target.value)}
+                    onChange={(e) => {
+                      set("evaluation_type", e.target.value);
+                      setProcedureSuggestOpen(true);
+                    }}
+                    onFocus={() => setProcedureSuggestOpen(true)}
+                    onBlur={() => setTimeout(() => setProcedureSuggestOpen(false), 150)}
+                    autoComplete="off"
                     maxLength={120}
                   />
+                  {procedureSuggestOpen && procedureMatches.length > 0 && (
+                    <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border bg-popover shadow-md">
+                      {procedureMatches.map((p) => (
+                        <li key={p.id}>
+                          <button
+                            type="button"
+                            className="block w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              set("evaluation_type", p.name);
+                              setProcedureSuggestOpen(false);
+                            }}
+                          >
+                            {p.name}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="evaluated_at">Data</Label>
@@ -200,7 +288,7 @@ function Avaliacoes() {
           <TableHeader>
             <TableRow>
               <TableHead>Paciente</TableHead>
-              <TableHead>Tipo</TableHead>
+              <TableHead>Procedimento</TableHead>
               <TableHead>Resumo</TableHead>
               <TableHead>Data</TableHead>
             </TableRow>
