@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { CalendarClock, ChevronLeft, ChevronRight, LayoutGrid, List, Plus } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { AppShell } from "@/components/clinicflow/AppShell";
@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { modules } from "@/lib/clinicflow";
 import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,14 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -83,20 +74,6 @@ const emptyForm = {
   notes: "",
 };
 
-const statusLabel: Record<string, string> = {
-  scheduled: "Agendado",
-  confirmed: "Confirmado",
-  completed: "Concluído",
-  cancelled: "Cancelado",
-};
-
-const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  scheduled: "secondary",
-  confirmed: "default",
-  completed: "outline",
-  cancelled: "destructive",
-};
-
 const statusBlockClass: Record<string, string> = {
   scheduled: "border-secondary-foreground/20 bg-secondary text-secondary-foreground",
   confirmed: "border-primary/40 bg-primary/15 text-primary",
@@ -106,7 +83,8 @@ const statusBlockClass: Record<string, string> = {
 
 const START_HOUR = 7;
 const END_HOUR = 21;
-const HOUR_HEIGHT = 56;
+const HOUR_HEIGHT = 32;
+const GRID_HEIGHT = (END_HOUR - START_HOUR) * HOUR_HEIGHT;
 
 function startOfWeek(date: Date) {
   const d = new Date(date);
@@ -117,15 +95,33 @@ function startOfWeek(date: Date) {
   return d;
 }
 
+function startOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
 function addDays(date: Date, n: number) {
   const d = new Date(date);
   d.setDate(d.getDate() + n);
   return d;
 }
 
+function addMonths(date: Date, n: number) {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + n);
+  return d;
+}
+
 function minutesSinceMidnight(iso: string) {
   const d = new Date(iso);
   return d.getHours() * 60 + d.getMinutes();
+}
+
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+
+function capitalize(text: string) {
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 type PlacedAppointment = {
@@ -170,8 +166,8 @@ function layoutDayEvents(dayAppointments: Appointment[]): PlacedAppointment[] {
 function Agenda() {
   const [orgId, setOrgId] = useState("");
   const [items, setItems] = useState<Appointment[]>([]);
-  const [view, setView] = useState<"list" | "week">("week");
-  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
+  const [view, setView] = useState<"day" | "week" | "month">("week");
+  const [cursorDate, setCursorDate] = useState(() => new Date());
   const [patients, setPatients] = useState<{ id: string; full_name: string }[]>([]);
   const [procedures, setProcedures] = useState<{ id: string; name: string }[]>([]);
   const [professionals, setProfessionals] = useState<{ id: string; full_name: string }[]>([]);
@@ -291,20 +287,22 @@ function Agenda() {
     }
   };
 
-  const formatWhen = (startsAt: string, endsAt: string) => {
-    const start = new Date(startsAt);
-    const end = new Date(endsAt);
-    const date = start.toLocaleDateString("pt-BR");
-    const range = `${start.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} – ${end.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
-    return `${date} · ${range}`;
-  };
-
-  const weekDays = useMemo(
-    () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
-    [weekStart],
+  const weekStart = useMemo(() => startOfWeek(cursorDate), [cursorDate]);
+  const daysToShow = useMemo(
+    () =>
+      view === "day" ? [cursorDate] : Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
+    [view, cursorDate, weekStart],
   );
 
-  const weekLabel = useMemo(() => {
+  const rangeLabel = useMemo(() => {
+    if (view === "day") {
+      return capitalize(
+        cursorDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" }),
+      );
+    }
+    if (view === "month") {
+      return capitalize(cursorDate.toLocaleDateString("pt-BR", { month: "long", year: "numeric" }));
+    }
     const last = addDays(weekStart, 6);
     const from = weekStart.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
     const to = last.toLocaleDateString("pt-BR", {
@@ -313,77 +311,98 @@ function Agenda() {
       year: "numeric",
     });
     return `${from} – ${to}`;
-  }, [weekStart]);
+  }, [view, cursorDate, weekStart]);
 
   const dayLayouts = useMemo(
     () =>
-      weekDays.map((day) =>
+      daysToShow.map((day) =>
         layoutDayEvents(
           items.filter((a) => new Date(a.starts_at).toDateString() === day.toDateString()),
         ),
       ),
-    [weekDays, items],
+    [daysToShow, items],
   );
+
+  const monthMatrix = useMemo(() => {
+    const gridStart = startOfWeek(startOfMonth(cursorDate));
+    return Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
+  }, [cursorDate]);
+
+  const itemsByDate = useMemo(() => {
+    const map = new Map<string, Appointment[]>();
+    for (const a of items) {
+      const key = new Date(a.starts_at).toDateString();
+      const arr = map.get(key) ?? [];
+      arr.push(a);
+      map.set(key, arr);
+    }
+    for (const arr of map.values()) {
+      arr.sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime());
+    }
+    return map;
+  }, [items]);
 
   const now = new Date();
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const currentMonth = cursorDate.getMonth();
+
+  const goPrev = () => {
+    if (view === "day") setCursorDate((d) => addDays(d, -1));
+    else if (view === "week") setCursorDate((d) => addDays(d, -7));
+    else setCursorDate((d) => addMonths(d, -1));
+  };
+  const goNext = () => {
+    if (view === "day") setCursorDate((d) => addDays(d, 1));
+    else if (view === "week") setCursorDate((d) => addDays(d, 7));
+    else setCursorDate((d) => addMonths(d, 1));
+  };
+  const goToday = () => setCursorDate(new Date());
 
   return (
     <AppShell title="Agenda">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <p className="max-w-xl text-sm text-muted-foreground">{module_.copy}</p>
         <div className="flex flex-wrap items-center gap-3">
-          {view === "week" && (
-            <div className="flex items-center gap-1 rounded-md border bg-card p-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8"
-                onClick={() => setWeekStart((w) => addDays(w, -7))}
-                aria-label="Semana anterior"
-              >
-                <ChevronLeft className="size-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-xs font-medium"
-                onClick={() => setWeekStart(startOfWeek(new Date()))}
-              >
-                Hoje
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8"
-                onClick={() => setWeekStart((w) => addDays(w, 7))}
-                aria-label="Próxima semana"
-              >
-                <ChevronRight className="size-4" />
-              </Button>
-              <span className="ml-1 px-2 text-sm font-medium capitalize">{weekLabel}</span>
-            </div>
-          )}
           <div className="flex items-center gap-1 rounded-md border bg-card p-1">
             <Button
-              variant={view === "week" ? "default" : "ghost"}
-              size="icon"
-              className="size-8"
-              onClick={() => setView("week")}
-              aria-label="Ver em calendário"
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2 text-xs font-medium"
+              onClick={goToday}
             >
-              <LayoutGrid className="size-4" />
+              Hoje
             </Button>
             <Button
-              variant={view === "list" ? "default" : "ghost"}
+              variant="ghost"
               size="icon"
               className="size-8"
-              onClick={() => setView("list")}
-              aria-label="Ver em lista"
+              onClick={goPrev}
+              aria-label="Anterior"
             >
-              <List className="size-4" />
+              <ChevronLeft className="size-4" />
             </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              onClick={goNext}
+              aria-label="Próximo"
+            >
+              <ChevronRight className="size-4" />
+            </Button>
+            <span className="ml-1 px-2 text-sm font-medium capitalize">{rangeLabel}</span>
           </div>
+          <Select value={view} onValueChange={(v) => setView(v as typeof view)}>
+            <SelectTrigger className="h-9 w-44">
+              <CalendarDays className="size-4" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="day">Hoje</SelectItem>
+              <SelectItem value="week">Próximos 7 dias</SelectItem>
+              <SelectItem value="month">Mês</SelectItem>
+            </SelectContent>
+          </Select>
           <Dialog
             open={open}
             onOpenChange={(next) => {
@@ -560,76 +579,82 @@ function Agenda() {
         </div>
       </div>
 
-      {view === "list" ? (
+      {view === "month" ? (
         <section className="mt-7 overflow-hidden rounded-lg border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Paciente</TableHead>
-                <TableHead>Profissional</TableHead>
-                <TableHead>Data/Horário</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((a) => (
-                <TableRow key={a.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="grid size-9 place-items-center rounded-full bg-primary/10 text-primary">
-                        <CalendarClock className="size-4" />
-                      </div>
-                      <p className="font-medium">{a.patient_name}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {a.professional_name ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {formatWhen(a.starts_at, a.ends_at)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariant[a.status] ?? "secondary"}>
-                      {statusLabel[a.status] ?? a.status}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          {items.length === 0 && (
-            <div className="grid min-h-80 place-items-center px-5 py-14 text-center">
-              <div>
-                <div className="mx-auto grid size-14 place-items-center rounded-lg bg-primary/10 text-primary">
-                  <CalendarClock className="size-6" />
-                </div>
-                <h2 className="mt-5 font-display text-xl font-semibold">
-                  Tudo pronto para começar
-                </h2>
-                <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
-                  Seus agendamentos aparecerão aqui, organizados para facilitar o dia a dia da
-                  equipe.
-                </p>
+          <div className="grid grid-cols-7 border-b">
+            {monthMatrix.slice(0, 7).map((day) => (
+              <div
+                key={day.toISOString()}
+                className="border-l px-2 py-2 text-center text-[10px] font-bold uppercase tracking-wide text-muted-foreground first:border-l-0"
+              >
+                {day.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")}
               </div>
-            </div>
-          )}
+            ))}
+          </div>
+          <div
+            className="grid grid-cols-7 grid-rows-6"
+            style={{ height: GRID_HEIGHT + HOUR_HEIGHT }}
+          >
+            {monthMatrix.map((day) => {
+              const isToday = day.toDateString() === now.toDateString();
+              const inMonth = day.getMonth() === currentMonth;
+              const dayItems = itemsByDate.get(day.toDateString()) ?? [];
+              const visible = dayItems.slice(0, 3);
+              return (
+                <div
+                  key={day.toISOString()}
+                  className={`overflow-hidden border-b border-l p-1 first:border-l-0 ${inMonth ? "" : "bg-muted/30"}`}
+                >
+                  <span
+                    className={`inline-flex size-5 items-center justify-center rounded-full text-xs ${
+                      isToday
+                        ? "bg-primary font-semibold text-primary-foreground"
+                        : inMonth
+                          ? "text-foreground"
+                          : "text-muted-foreground"
+                    }`}
+                  >
+                    {day.getDate()}
+                  </span>
+                  <div className="mt-1 space-y-0.5">
+                    {visible.map((a) => (
+                      <div
+                        key={a.id}
+                        title={`${formatTime(a.starts_at)} · ${a.patient_name}${a.procedure ? ` · ${a.procedure}` : ""}`}
+                        className={`truncate rounded px-1 py-0.5 text-[10px] leading-tight ${statusBlockClass[a.status] ?? statusBlockClass["scheduled"]}`}
+                      >
+                        {formatTime(a.starts_at)} {a.patient_name}
+                      </div>
+                    ))}
+                    {dayItems.length > visible.length && (
+                      <p className="px-1 text-[10px] text-muted-foreground">
+                        +{dayItems.length - visible.length} mais
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </section>
       ) : (
         <section className="mt-7 overflow-hidden rounded-lg border bg-card">
-          <div className="grid grid-cols-[56px_repeat(7,1fr)] border-b">
+          <div
+            className={`grid border-b ${view === "day" ? "grid-cols-[56px_1fr]" : "grid-cols-[56px_repeat(7,1fr)]"}`}
+          >
             <div />
-            {weekDays.map((day) => {
+            {daysToShow.map((day) => {
               const isToday = day.toDateString() === now.toDateString();
               return (
                 <div
                   key={day.toISOString()}
-                  className={`border-l px-2 py-3 text-center ${isToday ? "bg-primary/5" : ""}`}
+                  className={`border-l px-2 py-2 text-center ${isToday ? "bg-primary/5" : ""}`}
                 >
                   <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
                     {day.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")}
                   </p>
                   <p
-                    className={`mt-1 text-lg font-semibold ${isToday ? "text-primary" : "text-foreground"}`}
+                    className={`text-base font-semibold ${isToday ? "text-primary" : "text-foreground"}`}
                   >
                     {day.getDate()}
                   </p>
@@ -637,27 +662,29 @@ function Agenda() {
               );
             })}
           </div>
-          <div className="grid grid-cols-[56px_repeat(7,1fr)]">
+          <div
+            className={`grid ${view === "day" ? "grid-cols-[56px_1fr]" : "grid-cols-[56px_repeat(7,1fr)]"}`}
+          >
             <div className="relative">
               {Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i).map(
                 (hour) => (
                   <div
                     key={hour}
                     style={{ height: HOUR_HEIGHT }}
-                    className="border-t px-2 text-right text-xs text-muted-foreground first:border-t-0"
+                    className="border-t px-2 text-right text-[10px] text-muted-foreground first:border-t-0"
                   >
-                    <span className="relative -top-2">{`${String(hour).padStart(2, "0")}:00`}</span>
+                    <span className="relative -top-1.5">{`${String(hour).padStart(2, "0")}:00`}</span>
                   </div>
                 ),
               )}
             </div>
-            {weekDays.map((day, dayIndex) => {
+            {daysToShow.map((day, dayIndex) => {
               const isToday = day.toDateString() === now.toDateString();
               return (
                 <div
                   key={day.toISOString()}
                   className="relative border-l"
-                  style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT }}
+                  style={{ height: GRID_HEIGHT }}
                 >
                   {Array.from({ length: END_HOUR - START_HOUR }, (_, i) => i).map((i) => (
                     <div
@@ -675,7 +702,7 @@ function Agenda() {
                   {dayLayouts[dayIndex]?.map(({ appt, col, cols, startMin, endMin }) => {
                     const top = Math.max(0, ((startMin - START_HOUR * 60) / 60) * HOUR_HEIGHT);
                     const height = Math.max(
-                      18,
+                      14,
                       ((Math.min(endMin, END_HOUR * 60) - Math.max(startMin, START_HOUR * 60)) /
                         60) *
                         HOUR_HEIGHT,
@@ -683,7 +710,7 @@ function Agenda() {
                     return (
                       <div
                         key={appt.id}
-                        className={`absolute overflow-hidden rounded-md border px-1.5 py-1 text-[11px] leading-tight shadow-xs ${statusBlockClass[appt.status] ?? statusBlockClass["scheduled"]}`}
+                        className={`absolute overflow-hidden rounded-md border px-1.5 py-0.5 text-[10px] leading-tight shadow-xs ${statusBlockClass[appt.status] ?? statusBlockClass["scheduled"]}`}
                         style={{
                           top,
                           height,
