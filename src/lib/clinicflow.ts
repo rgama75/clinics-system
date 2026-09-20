@@ -26,13 +26,6 @@ export const modules = [
     action: "Novo agendamento",
   },
   {
-    slug: "procedimentos",
-    label: "Procedimentos",
-    icon: Syringe,
-    copy: "Gerencie o catálogo de procedimentos oferecidos pela clínica.",
-    action: "Novo procedimento",
-  },
-  {
     slug: "crm",
     label: "CRM",
     icon: ContactRound,
@@ -107,6 +100,7 @@ export const modules = [
 export const administration = [
   { slug: "equipe", label: "Equipe e permissões", icon: ShieldCheck },
   { slug: "unidades", label: "Unidades", icon: Building2 },
+  { slug: "procedimentos", label: "Procedimentos", icon: Syringe },
   { slug: "configuracoes", label: "Configurações", icon: Settings2 },
 ];
 export const dashboardItem = { slug: "dashboard", label: "Visão geral", icon: LayoutDashboard };

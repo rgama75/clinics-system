@@ -100,8 +100,10 @@ function Agenda() {
   const [orgId, setOrgId] = useState("");
   const [items, setItems] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<{ id: string; full_name: string }[]>([]);
+  const [procedures, setProcedures] = useState<{ id: string; name: string }[]>([]);
   const [professionals, setProfessionals] = useState<{ id: string; full_name: string }[]>([]);
   const [patientSuggestOpen, setPatientSuggestOpen] = useState(false);
+  const [procedureSuggestOpen, setProcedureSuggestOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -123,6 +125,15 @@ function Agenda() {
       .eq("organization_id", organizationId)
       .order("full_name", { ascending: true });
     setPatients(data ?? []);
+  };
+
+  const loadProcedures = async (organizationId: string) => {
+    const { data } = await supabase
+      .from("procedures")
+      .select("id, name")
+      .eq("organization_id", organizationId)
+      .order("name", { ascending: true });
+    setProcedures(data ?? []);
   };
 
   const loadProfessionals = async (organizationId: string) => {
@@ -157,6 +168,7 @@ function Agenda() {
       await Promise.all([
         loadAppointments(membership.organization_id),
         loadPatients(membership.organization_id),
+        loadProcedures(membership.organization_id),
         loadProfessionals(membership.organization_id),
       ]);
     })();
@@ -165,6 +177,12 @@ function Agenda() {
   const patientMatches = form.patient_name.trim()
     ? patients
         .filter((p) => p.full_name.toLowerCase().includes(form.patient_name.trim().toLowerCase()))
+        .slice(0, 6)
+    : [];
+
+  const procedureMatches = form.procedure.trim()
+    ? procedures
+        .filter((p) => p.name.toLowerCase().includes(form.procedure.trim().toLowerCase()))
         .slice(0, 6)
     : [];
 
@@ -269,15 +287,40 @@ function Agenda() {
                   </ul>
                 )}
               </div>
-              <div>
+              <div className="relative">
                 <Label htmlFor="procedure">Procedimento</Label>
                 <Input
                   id="procedure"
                   className="mt-2"
                   value={form.procedure}
-                  onChange={(e) => set("procedure", e.target.value)}
+                  onChange={(e) => {
+                    set("procedure", e.target.value);
+                    setProcedureSuggestOpen(true);
+                  }}
+                  onFocus={() => setProcedureSuggestOpen(true)}
+                  onBlur={() => setTimeout(() => setProcedureSuggestOpen(false), 150)}
+                  autoComplete="off"
                   maxLength={200}
                 />
+                {procedureSuggestOpen && procedureMatches.length > 0 && (
+                  <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border bg-popover shadow-md">
+                    {procedureMatches.map((p) => (
+                      <li key={p.id}>
+                        <button
+                          type="button"
+                          className="block w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            set("procedure", p.name);
+                            setProcedureSuggestOpen(false);
+                          }}
+                        >
+                          {p.name}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
               <div>
                 <Label htmlFor="professional_name">Profissional</Label>

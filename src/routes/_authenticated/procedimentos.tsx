@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { AppShell } from "@/components/clinicflow/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { modules } from "@/lib/clinicflow";
 import { useOrganizationId } from "@/hooks/use-organization-id";
 import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
@@ -31,15 +30,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-const module_ = modules.find((m) => m.slug === "procedimentos")!;
+const moduleCopy = "Gerencie o catálogo de procedimentos oferecidos pela clínica.";
 
 export const Route = createFileRoute("/_authenticated/procedimentos")({
   head: () => ({
     meta: [
       { title: "Procedimentos — ClinicFlow AI" },
-      { name: "description", content: module_.copy },
+      { name: "description", content: moduleCopy },
       { property: "og:title", content: "Procedimentos — ClinicFlow AI" },
-      { property: "og:description", content: module_.copy },
+      { property: "og:description", content: moduleCopy },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -154,7 +153,7 @@ function Procedimentos() {
   return (
     <AppShell title="Procedimentos">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="max-w-xl text-sm text-muted-foreground">{module_.copy}</p>
+        <p className="max-w-xl text-sm text-muted-foreground">{moduleCopy}</p>
         <Dialog
           open={open}
           onOpenChange={(next) => {
@@ -168,7 +167,7 @@ function Procedimentos() {
           <DialogTrigger asChild>
             <Button disabled={!orgId}>
               <Plus />
-              {module_.action}
+              Novo procedimento
             </Button>
           </DialogTrigger>
           <DialogContent>
