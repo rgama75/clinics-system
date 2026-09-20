@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Syringe, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowDown, ArrowUp, Pencil, Plus, Syringe } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { AppShell } from "@/components/clinicflow/AppShell";
@@ -13,6 +13,14 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -65,14 +73,35 @@ function Procedimentos() {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [sortAsc, setSortAsc] = useState(true);
   const set = (k: keyof typeof emptyForm, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  const openEdit = (p: Procedure) => {
+    setEditingId(p.id);
+    setForm({
+      name: p.name,
+      description: p.description ?? "",
+      price: p.price != null ? String(p.price) : "",
+      duration_minutes: p.duration_minutes != null ? String(p.duration_minutes) : "",
+    });
+    setOpen(true);
+  };
+
+  const visibleItems = useMemo(
+    () =>
+      [...items].sort((a, b) =>
+        sortAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name),
+      ),
+    [items, sortAsc],
+  );
 
   const loadItems = async (organizationId: string) => {
     const { data } = await supabase
       .from("procedures")
       .select("id, name, description, price, duration_minutes, active")
       .eq("organization_id", organizationId)
-      .order("created_at", { ascending: false });
+      .order("name", { ascending: true });
     setItems(data ?? []);
   };
 
@@ -84,24 +113,39 @@ function Procedimentos() {
     setBusy(true);
     try {
       const v = schema.parse(form);
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) throw new Error("Sessão expirada.");
       if (!orgId) throw new Error("Nenhuma clínica selecionada.");
-      const { error } = await supabase.from("procedures").insert({
-        organization_id: orgId,
+      const payload = {
         name: v.name,
         description: v.description || null,
         price: v.price ? Number(v.price) : null,
         duration_minutes: v.duration_minutes ? Number(v.duration_minutes) : null,
-        created_by: auth.user.id,
-      });
-      if (error) throw error;
-      toast.success("Procedimento criado com sucesso.");
+      };
+      if (editingId) {
+        const { error } = await supabase.from("procedures").update(payload).eq("id", editingId);
+        if (error) throw error;
+        toast.success("Procedimento atualizado com sucesso.");
+      } else {
+        const { data: auth } = await supabase.auth.getUser();
+        if (!auth.user) throw new Error("Sessão expirada.");
+        const { error } = await supabase
+          .from("procedures")
+          .insert({ ...payload, organization_id: orgId, created_by: auth.user.id });
+        if (error) throw error;
+        toast.success("Procedimento criado com sucesso.");
+      }
       setForm(emptyForm);
+      setEditingId(null);
       setOpen(false);
       await loadItems(orgId);
     } catch (err) {
-      toast.error(getErrorMessage(err, "Não foi possível criar o procedimento."));
+      toast.error(
+        getErrorMessage(
+          err,
+          editingId
+            ? "Não foi possível atualizar o procedimento."
+            : "Não foi possível criar o procedimento.",
+        ),
+      );
     } finally {
       setBusy(false);
     }
@@ -115,7 +159,10 @@ function Procedimentos() {
           open={open}
           onOpenChange={(next) => {
             setOpen(next);
-            if (!next) setForm(emptyForm);
+            if (!next) {
+              setForm(emptyForm);
+              setEditingId(null);
+            }
           }}
         >
           <DialogTrigger asChild>
@@ -126,9 +173,11 @@ function Procedimentos() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Novo procedimento</DialogTitle>
+              <DialogTitle>{editingId ? "Editar procedimento" : "Novo procedimento"}</DialogTitle>
               <DialogDescription>
-                Preencha os dados para criar um novo procedimento.
+                {editingId
+                  ? "Atualize os dados do procedimento."
+                  : "Preencha os dados para criar um novo procedimento."}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4">
@@ -186,42 +235,87 @@ function Procedimentos() {
                 Cancelar
               </Button>
               <Button onClick={() => void submit()} disabled={busy}>
-                {busy ? "Salvando..." : "Criar procedimento"}
+                {busy ? "Salvando..." : editingId ? "Salvar alterações" : "Criar procedimento"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {items.map((p) => (
-          <article key={p.id} className="rounded-lg border bg-card p-5 shadow-xs">
-            <div className="flex items-start justify-between">
-              <div className="grid size-10 place-items-center rounded-md bg-primary/10 text-primary">
-                <Syringe />
+      <section className="mt-7 overflow-hidden rounded-lg border bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead
+                className="cursor-pointer select-none"
+                onClick={() => setSortAsc((a) => !a)}
+              >
+                <span className="inline-flex items-center gap-1">
+                  Procedimento
+                  {sortAsc ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />}
+                </span>
+              </TableHead>
+              <TableHead>Descrição</TableHead>
+              <TableHead>Duração</TableHead>
+              <TableHead>Preço</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="w-12" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {visibleItems.map((p) => (
+              <TableRow key={p.id}>
+                <TableCell className="py-1">
+                  <div className="flex items-center gap-3">
+                    <div className="grid size-7 place-items-center rounded-full bg-primary/10 text-primary">
+                      <Syringe className="size-3" />
+                    </div>
+                    <p className="font-medium">{p.name}</p>
+                  </div>
+                </TableCell>
+                <TableCell className="py-1 text-sm text-muted-foreground">
+                  {p.description ?? "—"}
+                </TableCell>
+                <TableCell className="py-1 text-sm text-muted-foreground">
+                  {p.duration_minutes != null ? `${p.duration_minutes} min` : "—"}
+                </TableCell>
+                <TableCell className="py-1 text-sm text-muted-foreground">
+                  {p.price != null ? currency.format(p.price) : "—"}
+                </TableCell>
+                <TableCell className="py-1">
+                  <Badge variant={p.active ? "default" : "secondary"}>
+                    {p.active ? "Ativo" : "Inativo"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="py-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Editar procedimento"
+                    onClick={() => openEdit(p)}
+                  >
+                    <Pencil className="size-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        {items.length === 0 && (
+          <div className="grid min-h-80 place-items-center px-5 py-14 text-center">
+            <div>
+              <div className="mx-auto grid size-14 place-items-center rounded-lg bg-primary/10 text-primary">
+                <Syringe className="size-6" />
               </div>
-              <Badge variant={p.active ? "default" : "secondary"}>
-                {p.active ? "Ativo" : "Inativo"}
-              </Badge>
+              <h2 className="mt-5 font-display text-xl font-semibold">Tudo pronto para começar</h2>
+              <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
+                Seus procedimentos aparecerão aqui, organizados para facilitar o dia a dia da
+                equipe.
+              </p>
             </div>
-            <h2 className="mt-5 font-display text-lg font-semibold">{p.name}</h2>
-            {p.description && <p className="mt-2 text-sm text-muted-foreground">{p.description}</p>}
-            <div className="mt-5 flex items-center justify-between border-t pt-4 text-xs text-muted-foreground">
-              <span>
-                {p.duration_minutes != null ? `${p.duration_minutes} min` : "Duração não definida"}
-              </span>
-              <span className="font-semibold text-foreground">
-                {p.price != null ? currency.format(p.price) : "—"}
-              </span>
-            </div>
-          </article>
-        ))}
-      </div>
-      {items.length === 0 && (
-        <div className="mt-7 rounded-lg border bg-card p-12 text-center text-sm text-muted-foreground">
-          Seus procedimentos aparecerão aqui, organizados para facilitar o dia a dia da equipe.
-        </div>
-      )}
+          </div>
+        )}
+      </section>
     </AppShell>
   );
 }
