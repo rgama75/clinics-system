@@ -5,6 +5,7 @@ import {
   Star,
   FileText,
   ShoppingBag,
+  Syringe,
   PackageOpen,
   Repeat2,
   WalletCards,
@@ -23,6 +24,13 @@ export const modules = [
     icon: CalendarDays,
     copy: "Organize horários, salas e profissionais.",
     action: "Novo agendamento",
+  },
+  {
+    slug: "procedimentos",
+    label: "Procedimentos",
+    icon: Syringe,
+    copy: "Gerencie o catálogo de procedimentos oferecidos pela clínica.",
+    action: "Novo procedimento",
   },
   {
     slug: "crm",
