@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -57,7 +58,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
               router.invalidate();
               reset();
             }}
-            >
+          >
             Tentar novamente
           </Button>
           <Button asChild variant="outline">
@@ -78,10 +79,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Gestão integrada para clínicas de estética e saúde." },
       { name: "author", content: "ClinicFlow AI" },
       { property: "og:title", content: "ClinicFlow AI" },
-      { property: "og:description", content: "Gestão integrada para clínicas de estética e saúde." },
+      {
+        property: "og:description",
+        content: "Gestão integrada para clínicas de estética e saúde.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      
     ],
     links: [
       {
@@ -127,10 +130,27 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("clinicflow-theme");
+      if (!saved) return;
+      const effective =
+        saved === "system"
+          ? window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light"
+          : saved;
+      document.documentElement.classList.toggle("dark", effective === "dark");
+    } catch {
+      // ignore: localStorage may be unavailable
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <Toaster position="top-right" richColors />
     </QueryClientProvider>
   );
 }
