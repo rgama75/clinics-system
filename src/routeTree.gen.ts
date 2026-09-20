@@ -14,23 +14,11 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedModuleRouteImport } from './routes/_authenticated/$module'
-import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
-import { Route as AuthenticatedAssinaturasRouteImport } from './routes/_authenticated/assinaturas'
-import { Route as AuthenticatedAutomacoesRouteImport } from './routes/_authenticated/automacoes'
-import { Route as AuthenticatedAvaliacoesRouteImport } from './routes/_authenticated/avaliacoes'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
-import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
-import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
-import { Route as AuthenticatedPacientesRouteImport } from './routes/_authenticated/pacientes'
-import { Route as AuthenticatedPacotesRouteImport } from './routes/_authenticated/pacotes'
-import { Route as AuthenticatedPropostasRouteImport } from './routes/_authenticated/propostas'
-import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
 import { Route as AuthenticatedUnidadesRouteImport } from './routes/_authenticated/unidades'
-import { Route as AuthenticatedVendasRouteImport } from './routes/_authenticated/vendas'
-import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -56,38 +44,12 @@ const AuthenticatedModuleRoute = AuthenticatedModuleRouteImport.update({
   path: '/$module',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
-  id: '/agenda',
-  path: '/agenda',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAssinaturasRoute =
-  AuthenticatedAssinaturasRouteImport.update({
-    id: '/assinaturas',
-    path: '/assinaturas',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAutomacoesRoute = AuthenticatedAutomacoesRouteImport.update({
-  id: '/automacoes',
-  path: '/automacoes',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAvaliacoesRoute = AuthenticatedAvaliacoesRouteImport.update({
-  id: '/avaliacoes',
-  path: '/avaliacoes',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedConfiguracoesRoute =
   AuthenticatedConfiguracoesRouteImport.update({
     id: '/configuracoes',
     path: '/configuracoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedCrmRoute = AuthenticatedCrmRouteImport.update({
-  id: '/crm',
-  path: '/crm',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -98,34 +60,9 @@ const AuthenticatedEquipeRoute = AuthenticatedEquipeRouteImport.update({
   path: '/equipe',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
-  id: '/financeiro',
-  path: '/financeiro',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPacientesRoute = AuthenticatedPacientesRouteImport.update({
-  id: '/pacientes',
-  path: '/pacientes',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPacotesRoute = AuthenticatedPacotesRouteImport.update({
-  id: '/pacotes',
-  path: '/pacotes',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPropostasRoute = AuthenticatedPropostasRouteImport.update({
-  id: '/propostas',
-  path: '/propostas',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
-  id: '/relatorios',
-  path: '/relatorios',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedUnidadesRoute = AuthenticatedUnidadesRouteImport.update({
@@ -133,62 +70,28 @@ const AuthenticatedUnidadesRoute = AuthenticatedUnidadesRouteImport.update({
   path: '/unidades',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedVendasRoute = AuthenticatedVendasRouteImport.update({
-  id: '/vendas',
-  path: '/vendas',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const ConviteTokenRoute = ConviteTokenRouteImport.update({
-  id: '/convite/$token',
-  path: '/convite/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/$module': typeof AuthenticatedModuleRoute
-  '/agenda': typeof AuthenticatedAgendaRoute
-  '/assinaturas': typeof AuthenticatedAssinaturasRoute
-  '/automacoes': typeof AuthenticatedAutomacoesRoute
-  '/avaliacoes': typeof AuthenticatedAvaliacoesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
-  '/crm': typeof AuthenticatedCrmRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/equipe': typeof AuthenticatedEquipeRoute
-  '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
-  '/pacientes': typeof AuthenticatedPacientesRoute
-  '/pacotes': typeof AuthenticatedPacotesRoute
-  '/propostas': typeof AuthenticatedPropostasRoute
-  '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
-  '/vendas': typeof AuthenticatedVendasRoute
-  '/convite/$token': typeof ConviteTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/$module': typeof AuthenticatedModuleRoute
-  '/agenda': typeof AuthenticatedAgendaRoute
-  '/assinaturas': typeof AuthenticatedAssinaturasRoute
-  '/automacoes': typeof AuthenticatedAutomacoesRoute
-  '/avaliacoes': typeof AuthenticatedAvaliacoesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
-  '/crm': typeof AuthenticatedCrmRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/equipe': typeof AuthenticatedEquipeRoute
-  '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
-  '/pacientes': typeof AuthenticatedPacientesRoute
-  '/pacotes': typeof AuthenticatedPacotesRoute
-  '/propostas': typeof AuthenticatedPropostasRoute
-  '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
-  '/vendas': typeof AuthenticatedVendasRoute
-  '/convite/$token': typeof ConviteTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -197,23 +100,11 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/$module': typeof AuthenticatedModuleRoute
-  '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
-  '/_authenticated/assinaturas': typeof AuthenticatedAssinaturasRoute
-  '/_authenticated/automacoes': typeof AuthenticatedAutomacoesRoute
-  '/_authenticated/avaliacoes': typeof AuthenticatedAvaliacoesRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
-  '/_authenticated/crm': typeof AuthenticatedCrmRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/equipe': typeof AuthenticatedEquipeRoute
-  '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
-  '/_authenticated/pacientes': typeof AuthenticatedPacientesRoute
-  '/_authenticated/pacotes': typeof AuthenticatedPacotesRoute
-  '/_authenticated/propostas': typeof AuthenticatedPropostasRoute
-  '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/unidades': typeof AuthenticatedUnidadesRoute
-  '/_authenticated/vendas': typeof AuthenticatedVendasRoute
-  '/convite/$token': typeof ConviteTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -222,46 +113,22 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/$module'
-    | '/agenda'
-    | '/assinaturas'
-    | '/automacoes'
-    | '/avaliacoes'
     | '/configuracoes'
-    | '/crm'
     | '/dashboard'
     | '/equipe'
-    | '/financeiro'
     | '/onboarding'
-    | '/pacientes'
-    | '/pacotes'
-    | '/propostas'
-    | '/relatorios'
     | '/unidades'
-    | '/vendas'
-    | '/convite/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/reset-password'
     | '/$module'
-    | '/agenda'
-    | '/assinaturas'
-    | '/automacoes'
-    | '/avaliacoes'
     | '/configuracoes'
-    | '/crm'
     | '/dashboard'
     | '/equipe'
-    | '/financeiro'
     | '/onboarding'
-    | '/pacientes'
-    | '/pacotes'
-    | '/propostas'
-    | '/relatorios'
     | '/unidades'
-    | '/vendas'
-    | '/convite/$token'
   id:
     | '__root__'
     | '/'
@@ -269,23 +136,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/_authenticated/$module'
-    | '/_authenticated/agenda'
-    | '/_authenticated/assinaturas'
-    | '/_authenticated/automacoes'
-    | '/_authenticated/avaliacoes'
     | '/_authenticated/configuracoes'
-    | '/_authenticated/crm'
     | '/_authenticated/dashboard'
     | '/_authenticated/equipe'
-    | '/_authenticated/financeiro'
     | '/_authenticated/onboarding'
-    | '/_authenticated/pacientes'
-    | '/_authenticated/pacotes'
-    | '/_authenticated/propostas'
-    | '/_authenticated/relatorios'
     | '/_authenticated/unidades'
-    | '/_authenticated/vendas'
-    | '/convite/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -293,7 +148,6 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  ConviteTokenRoute: typeof ConviteTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -333,46 +187,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedModuleRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/agenda': {
-      id: '/_authenticated/agenda'
-      path: '/agenda'
-      fullPath: '/agenda'
-      preLoaderRoute: typeof AuthenticatedAgendaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/assinaturas': {
-      id: '/_authenticated/assinaturas'
-      path: '/assinaturas'
-      fullPath: '/assinaturas'
-      preLoaderRoute: typeof AuthenticatedAssinaturasRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/automacoes': {
-      id: '/_authenticated/automacoes'
-      path: '/automacoes'
-      fullPath: '/automacoes'
-      preLoaderRoute: typeof AuthenticatedAutomacoesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/avaliacoes': {
-      id: '/_authenticated/avaliacoes'
-      path: '/avaliacoes'
-      fullPath: '/avaliacoes'
-      preLoaderRoute: typeof AuthenticatedAvaliacoesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/configuracoes': {
       id: '/_authenticated/configuracoes'
       path: '/configuracoes'
       fullPath: '/configuracoes'
       preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/crm': {
-      id: '/_authenticated/crm'
-      path: '/crm'
-      fullPath: '/crm'
-      preLoaderRoute: typeof AuthenticatedCrmRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -389,46 +208,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEquipeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/financeiro': {
-      id: '/_authenticated/financeiro'
-      path: '/financeiro'
-      fullPath: '/financeiro'
-      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/pacientes': {
-      id: '/_authenticated/pacientes'
-      path: '/pacientes'
-      fullPath: '/pacientes'
-      preLoaderRoute: typeof AuthenticatedPacientesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/pacotes': {
-      id: '/_authenticated/pacotes'
-      path: '/pacotes'
-      fullPath: '/pacotes'
-      preLoaderRoute: typeof AuthenticatedPacotesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/propostas': {
-      id: '/_authenticated/propostas'
-      path: '/propostas'
-      fullPath: '/propostas'
-      preLoaderRoute: typeof AuthenticatedPropostasRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/relatorios': {
-      id: '/_authenticated/relatorios'
-      path: '/relatorios'
-      fullPath: '/relatorios'
-      preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/unidades': {
@@ -438,61 +222,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUnidadesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/vendas': {
-      id: '/_authenticated/vendas'
-      path: '/vendas'
-      fullPath: '/vendas'
-      preLoaderRoute: typeof AuthenticatedVendasRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/convite/$token': {
-      id: '/convite/$token'
-      path: '/convite/$token'
-      fullPath: '/convite/$token'
-      preLoaderRoute: typeof ConviteTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedModuleRoute: typeof AuthenticatedModuleRoute
-  AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
-  AuthenticatedAssinaturasRoute: typeof AuthenticatedAssinaturasRoute
-  AuthenticatedAutomacoesRoute: typeof AuthenticatedAutomacoesRoute
-  AuthenticatedAvaliacoesRoute: typeof AuthenticatedAvaliacoesRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
-  AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEquipeRoute: typeof AuthenticatedEquipeRoute
-  AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
-  AuthenticatedPacientesRoute: typeof AuthenticatedPacientesRoute
-  AuthenticatedPacotesRoute: typeof AuthenticatedPacotesRoute
-  AuthenticatedPropostasRoute: typeof AuthenticatedPropostasRoute
-  AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
   AuthenticatedUnidadesRoute: typeof AuthenticatedUnidadesRoute
-  AuthenticatedVendasRoute: typeof AuthenticatedVendasRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedModuleRoute: AuthenticatedModuleRoute,
-  AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
-  AuthenticatedAssinaturasRoute: AuthenticatedAssinaturasRoute,
-  AuthenticatedAutomacoesRoute: AuthenticatedAutomacoesRoute,
-  AuthenticatedAvaliacoesRoute: AuthenticatedAvaliacoesRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
-  AuthenticatedCrmRoute: AuthenticatedCrmRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEquipeRoute: AuthenticatedEquipeRoute,
-  AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
-  AuthenticatedPacientesRoute: AuthenticatedPacientesRoute,
-  AuthenticatedPacotesRoute: AuthenticatedPacotesRoute,
-  AuthenticatedPropostasRoute: AuthenticatedPropostasRoute,
-  AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
   AuthenticatedUnidadesRoute: AuthenticatedUnidadesRoute,
-  AuthenticatedVendasRoute: AuthenticatedVendasRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -503,7 +251,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  ConviteTokenRoute: ConviteTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

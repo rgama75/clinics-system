@@ -6,3 +6,4 @@
 - [x] Implementar onboarding guiado
 - [x] Construir navegação, dashboard e telas dos módulos
 - [x] Validar fluxos principais em desktop e celular
+- [ ] Verificar o segredo do Resend e publicar a função de convite — bloqueado: arquivo ainda ausente no checkout e `RESEND_API_KEY` não vinculado
