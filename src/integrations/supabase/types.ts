@@ -489,6 +489,53 @@ export type Database = {
           },
         ];
       };
+      procedures: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          created_by: string;
+          description: string | null;
+          duration_minutes: number | null;
+          id: string;
+          name: string;
+          organization_id: string;
+          price: number | null;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          created_by: string;
+          description?: string | null;
+          duration_minutes?: number | null;
+          id?: string;
+          name: string;
+          organization_id: string;
+          price?: number | null;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          created_by?: string;
+          description?: string | null;
+          duration_minutes?: number | null;
+          id?: string;
+          name?: string;
+          organization_id?: string;
+          price?: number | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "procedures_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           avatar_url: string | null;

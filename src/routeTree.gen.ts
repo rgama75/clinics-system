@@ -26,6 +26,7 @@ import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authentic
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedPacientesRouteImport } from './routes/_authenticated/pacientes'
 import { Route as AuthenticatedPacotesRouteImport } from './routes/_authenticated/pacotes'
+import { Route as AuthenticatedProcedimentosRouteImport } from './routes/_authenticated/procedimentos'
 import { Route as AuthenticatedPropostasRouteImport } from './routes/_authenticated/propostas'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
 import { Route as AuthenticatedUnidadesRouteImport } from './routes/_authenticated/unidades'
@@ -118,6 +119,12 @@ const AuthenticatedPacotesRoute = AuthenticatedPacotesRouteImport.update({
   path: '/pacotes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProcedimentosRoute =
+  AuthenticatedProcedimentosRouteImport.update({
+    id: '/procedimentos',
+    path: '/procedimentos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPropostasRoute = AuthenticatedPropostasRouteImport.update({
   id: '/propostas',
   path: '/propostas',
@@ -161,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/pacientes': typeof AuthenticatedPacientesRoute
   '/pacotes': typeof AuthenticatedPacotesRoute
+  '/procedimentos': typeof AuthenticatedProcedimentosRoute
   '/propostas': typeof AuthenticatedPropostasRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
@@ -184,6 +192,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/pacientes': typeof AuthenticatedPacientesRoute
   '/pacotes': typeof AuthenticatedPacotesRoute
+  '/procedimentos': typeof AuthenticatedProcedimentosRoute
   '/propostas': typeof AuthenticatedPropostasRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
@@ -209,6 +218,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/pacientes': typeof AuthenticatedPacientesRoute
   '/_authenticated/pacotes': typeof AuthenticatedPacotesRoute
+  '/_authenticated/procedimentos': typeof AuthenticatedProcedimentosRoute
   '/_authenticated/propostas': typeof AuthenticatedPropostasRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/unidades': typeof AuthenticatedUnidadesRoute
@@ -234,6 +244,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/pacientes'
     | '/pacotes'
+    | '/procedimentos'
     | '/propostas'
     | '/relatorios'
     | '/unidades'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/pacientes'
     | '/pacotes'
+    | '/procedimentos'
     | '/propostas'
     | '/relatorios'
     | '/unidades'
@@ -281,6 +293,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/pacientes'
     | '/_authenticated/pacotes'
+    | '/_authenticated/procedimentos'
     | '/_authenticated/propostas'
     | '/_authenticated/relatorios'
     | '/_authenticated/unidades'
@@ -417,6 +430,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPacotesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/procedimentos': {
+      id: '/_authenticated/procedimentos'
+      path: '/procedimentos'
+      fullPath: '/procedimentos'
+      preLoaderRoute: typeof AuthenticatedProcedimentosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/propostas': {
       id: '/_authenticated/propostas'
       path: '/propostas'
@@ -469,6 +489,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPacientesRoute: typeof AuthenticatedPacientesRoute
   AuthenticatedPacotesRoute: typeof AuthenticatedPacotesRoute
+  AuthenticatedProcedimentosRoute: typeof AuthenticatedProcedimentosRoute
   AuthenticatedPropostasRoute: typeof AuthenticatedPropostasRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
   AuthenticatedUnidadesRoute: typeof AuthenticatedUnidadesRoute
@@ -489,6 +510,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPacientesRoute: AuthenticatedPacientesRoute,
   AuthenticatedPacotesRoute: AuthenticatedPacotesRoute,
+  AuthenticatedProcedimentosRoute: AuthenticatedProcedimentosRoute,
   AuthenticatedPropostasRoute: AuthenticatedPropostasRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
   AuthenticatedUnidadesRoute: AuthenticatedUnidadesRoute,
