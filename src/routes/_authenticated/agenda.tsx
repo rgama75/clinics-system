@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { CalendarClock, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { CalendarClock, ChevronLeft, ChevronRight, LayoutGrid, List, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { AppShell } from "@/components/clinicflow/AppShell";
@@ -56,6 +56,7 @@ export const Route = createFileRoute("/_authenticated/agenda")({
 type Appointment = {
   id: string;
   patient_name: string;
+  procedure: string | null;
   professional_name: string | null;
   starts_at: string;
   ends_at: string;
@@ -96,9 +97,81 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive" | "o
   cancelled: "destructive",
 };
 
+const statusBlockClass: Record<string, string> = {
+  scheduled: "border-secondary-foreground/20 bg-secondary text-secondary-foreground",
+  confirmed: "border-primary/40 bg-primary/15 text-primary",
+  completed: "border-border bg-muted text-muted-foreground",
+  cancelled: "border-destructive/40 bg-destructive/10 text-destructive line-through",
+};
+
+const START_HOUR = 7;
+const END_HOUR = 21;
+const HOUR_HEIGHT = 56;
+
+function startOfWeek(date: Date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = (day === 0 ? -6 : 1) - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function addDays(date: Date, n: number) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+
+function minutesSinceMidnight(iso: string) {
+  const d = new Date(iso);
+  return d.getHours() * 60 + d.getMinutes();
+}
+
+type PlacedAppointment = {
+  appt: Appointment;
+  col: number;
+  cols: number;
+  startMin: number;
+  endMin: number;
+};
+
+function layoutDayEvents(dayAppointments: Appointment[]): PlacedAppointment[] {
+  const sorted = [...dayAppointments].sort(
+    (a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
+  );
+  type Placing = { appt: Appointment; col: number; startMin: number; endMin: number };
+  const clusters: Placing[][] = [];
+  let current: Placing[] = [];
+  let currentEnd = -Infinity;
+  for (const appt of sorted) {
+    const startMin = minutesSinceMidnight(appt.starts_at);
+    const endMin = Math.max(minutesSinceMidnight(appt.ends_at), startMin + 15);
+    if (current.length && startMin >= currentEnd) {
+      clusters.push(current);
+      current = [];
+      currentEnd = -Infinity;
+    }
+    const activeCols = current.filter((p) => p.endMin > startMin).map((p) => p.col);
+    let col = 0;
+    while (activeCols.includes(col)) col++;
+    current.push({ appt, col, startMin, endMin });
+    currentEnd = Math.max(currentEnd, endMin);
+  }
+  if (current.length) clusters.push(current);
+  const result: PlacedAppointment[] = [];
+  for (const cluster of clusters) {
+    const cols = Math.max(...cluster.map((p) => p.col)) + 1;
+    for (const p of cluster) result.push({ ...p, cols });
+  }
+  return result;
+}
+
 function Agenda() {
   const [orgId, setOrgId] = useState("");
   const [items, setItems] = useState<Appointment[]>([]);
+  const [view, setView] = useState<"list" | "week">("week");
+  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
   const [patients, setPatients] = useState<{ id: string; full_name: string }[]>([]);
   const [procedures, setProcedures] = useState<{ id: string; name: string }[]>([]);
   const [professionals, setProfessionals] = useState<{ id: string; full_name: string }[]>([]);
@@ -112,7 +185,7 @@ function Agenda() {
   const loadAppointments = async (organizationId: string) => {
     const { data } = await supabase
       .from("appointments")
-      .select("id, patient_name, professional_name, starts_at, ends_at, status")
+      .select("id, patient_name, procedure, professional_name, starts_at, ends_at, status")
       .eq("organization_id", organizationId)
       .order("starts_at", { ascending: true });
     setItems(data ?? []);
@@ -226,235 +299,415 @@ function Agenda() {
     return `${date} · ${range}`;
   };
 
+  const weekDays = useMemo(
+    () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
+    [weekStart],
+  );
+
+  const weekLabel = useMemo(() => {
+    const last = addDays(weekStart, 6);
+    const from = weekStart.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+    const to = last.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    return `${from} – ${to}`;
+  }, [weekStart]);
+
+  const dayLayouts = useMemo(
+    () =>
+      weekDays.map((day) =>
+        layoutDayEvents(
+          items.filter((a) => new Date(a.starts_at).toDateString() === day.toDateString()),
+        ),
+      ),
+    [weekDays, items],
+  );
+
+  const now = new Date();
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
   return (
     <AppShell title="Agenda">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <p className="max-w-xl text-sm text-muted-foreground">{module_.copy}</p>
-        <Dialog
-          open={open}
-          onOpenChange={(next) => {
-            setOpen(next);
-            if (!next) setForm(emptyForm);
-          }}
-        >
-          <DialogTrigger asChild>
-            <Button disabled={!orgId}>
-              <Plus />
-              {module_.action}
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Novo agendamento</DialogTitle>
-              <DialogDescription>
-                Preencha os dados para registrar um novo agendamento.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4">
-              <div className="relative">
-                <Label htmlFor="patient_name">Paciente</Label>
-                <Input
-                  id="patient_name"
-                  className="mt-2"
-                  value={form.patient_name}
-                  onChange={(e) => {
-                    set("patient_name", e.target.value);
-                    setPatientSuggestOpen(true);
-                  }}
-                  onFocus={() => setPatientSuggestOpen(true)}
-                  onBlur={() => setTimeout(() => setPatientSuggestOpen(false), 150)}
-                  autoComplete="off"
-                  maxLength={160}
-                  required
-                />
-                {patientSuggestOpen && patientMatches.length > 0 && (
-                  <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border bg-popover shadow-md">
-                    {patientMatches.map((p) => (
-                      <li key={p.id}>
-                        <button
-                          type="button"
-                          className="block w-full px-3 py-2 text-left text-sm hover:bg-muted"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            set("patient_name", p.full_name);
-                            setPatientSuggestOpen(false);
-                          }}
-                        >
-                          {p.full_name}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <div className="relative">
-                <Label htmlFor="procedure">Procedimento</Label>
-                <Input
-                  id="procedure"
-                  className="mt-2"
-                  value={form.procedure}
-                  onChange={(e) => {
-                    set("procedure", e.target.value);
-                    setProcedureSuggestOpen(true);
-                  }}
-                  onFocus={() => setProcedureSuggestOpen(true)}
-                  onBlur={() => setTimeout(() => setProcedureSuggestOpen(false), 150)}
-                  autoComplete="off"
-                  maxLength={200}
-                />
-                {procedureSuggestOpen && procedureMatches.length > 0 && (
-                  <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border bg-popover shadow-md">
-                    {procedureMatches.map((p) => (
-                      <li key={p.id}>
-                        <button
-                          type="button"
-                          className="block w-full px-3 py-2 text-left text-sm hover:bg-muted"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            set("procedure", p.name);
-                            setProcedureSuggestOpen(false);
-                          }}
-                        >
-                          {p.name}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="professional_name">Profissional</Label>
-                <Select
-                  {...(form.professional_name ? { value: form.professional_name } : {})}
-                  onValueChange={(v) => set("professional_name", v)}
-                >
-                  <SelectTrigger id="professional_name" className="mt-2">
-                    <SelectValue placeholder="Selecione um profissional" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {professionals.length === 0 ? (
-                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                        Nenhum profissional encontrado
-                      </div>
-                    ) : (
-                      professionals.map((p) => (
-                        <SelectItem key={p.id} value={p.full_name}>
-                          {p.full_name}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <Label htmlFor="date">Data</Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    className="mt-2"
-                    value={form.date}
-                    onChange={(e) => set("date", e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="start_time">Início</Label>
-                  <Input
-                    id="start_time"
-                    type="time"
-                    className="mt-2"
-                    value={form.start_time}
-                    onChange={(e) => set("start_time", e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="end_time">Término</Label>
-                  <Input
-                    id="end_time"
-                    type="time"
-                    className="mt-2"
-                    value={form.end_time}
-                    onChange={(e) => set("end_time", e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="notes">Observações</Label>
-                <Textarea
-                  id="notes"
-                  className="mt-2"
-                  value={form.notes}
-                  onChange={(e) => set("notes", e.target.value)}
-                  maxLength={2000}
-                  rows={3}
-                />
-              </div>
+        <div className="flex flex-wrap items-center gap-3">
+          {view === "week" && (
+            <div className="flex items-center gap-1 rounded-md border bg-card p-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8"
+                onClick={() => setWeekStart((w) => addDays(w, -7))}
+                aria-label="Semana anterior"
+              >
+                <ChevronLeft className="size-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-xs font-medium"
+                onClick={() => setWeekStart(startOfWeek(new Date()))}
+              >
+                Hoje
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8"
+                onClick={() => setWeekStart((w) => addDays(w, 7))}
+                aria-label="Próxima semana"
+              >
+                <ChevronRight className="size-4" />
+              </Button>
+              <span className="ml-1 px-2 text-sm font-medium capitalize">{weekLabel}</span>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)} disabled={busy}>
-                Cancelar
+          )}
+          <div className="flex items-center gap-1 rounded-md border bg-card p-1">
+            <Button
+              variant={view === "week" ? "default" : "ghost"}
+              size="icon"
+              className="size-8"
+              onClick={() => setView("week")}
+              aria-label="Ver em calendário"
+            >
+              <LayoutGrid className="size-4" />
+            </Button>
+            <Button
+              variant={view === "list" ? "default" : "ghost"}
+              size="icon"
+              className="size-8"
+              onClick={() => setView("list")}
+              aria-label="Ver em lista"
+            >
+              <List className="size-4" />
+            </Button>
+          </div>
+          <Dialog
+            open={open}
+            onOpenChange={(next) => {
+              setOpen(next);
+              if (!next) setForm(emptyForm);
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button disabled={!orgId}>
+                <Plus />
+                {module_.action}
               </Button>
-              <Button onClick={() => void submit()} disabled={busy}>
-                {busy ? "Criando..." : "Criar agendamento"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Novo agendamento</DialogTitle>
+                <DialogDescription>
+                  Preencha os dados para registrar um novo agendamento.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4">
+                <div className="relative">
+                  <Label htmlFor="patient_name">Paciente</Label>
+                  <Input
+                    id="patient_name"
+                    className="mt-2"
+                    value={form.patient_name}
+                    onChange={(e) => {
+                      set("patient_name", e.target.value);
+                      setPatientSuggestOpen(true);
+                    }}
+                    onFocus={() => setPatientSuggestOpen(true)}
+                    onBlur={() => setTimeout(() => setPatientSuggestOpen(false), 150)}
+                    autoComplete="off"
+                    maxLength={160}
+                    required
+                  />
+                  {patientSuggestOpen && patientMatches.length > 0 && (
+                    <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border bg-popover shadow-md">
+                      {patientMatches.map((p) => (
+                        <li key={p.id}>
+                          <button
+                            type="button"
+                            className="block w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              set("patient_name", p.full_name);
+                              setPatientSuggestOpen(false);
+                            }}
+                          >
+                            {p.full_name}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <div className="relative">
+                  <Label htmlFor="procedure">Procedimento</Label>
+                  <Input
+                    id="procedure"
+                    className="mt-2"
+                    value={form.procedure}
+                    onChange={(e) => {
+                      set("procedure", e.target.value);
+                      setProcedureSuggestOpen(true);
+                    }}
+                    onFocus={() => setProcedureSuggestOpen(true)}
+                    onBlur={() => setTimeout(() => setProcedureSuggestOpen(false), 150)}
+                    autoComplete="off"
+                    maxLength={200}
+                  />
+                  {procedureSuggestOpen && procedureMatches.length > 0 && (
+                    <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border bg-popover shadow-md">
+                      {procedureMatches.map((p) => (
+                        <li key={p.id}>
+                          <button
+                            type="button"
+                            className="block w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              set("procedure", p.name);
+                              setProcedureSuggestOpen(false);
+                            }}
+                          >
+                            {p.name}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="professional_name">Profissional</Label>
+                  <Select
+                    {...(form.professional_name ? { value: form.professional_name } : {})}
+                    onValueChange={(v) => set("professional_name", v)}
+                  >
+                    <SelectTrigger id="professional_name" className="mt-2">
+                      <SelectValue placeholder="Selecione um profissional" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {professionals.length === 0 ? (
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                          Nenhum profissional encontrado
+                        </div>
+                      ) : (
+                        professionals.map((p) => (
+                          <SelectItem key={p.id} value={p.full_name}>
+                            {p.full_name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <Label htmlFor="date">Data</Label>
+                    <Input
+                      id="date"
+                      type="date"
+                      className="mt-2"
+                      value={form.date}
+                      onChange={(e) => set("date", e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="start_time">Início</Label>
+                    <Input
+                      id="start_time"
+                      type="time"
+                      className="mt-2"
+                      value={form.start_time}
+                      onChange={(e) => set("start_time", e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="end_time">Término</Label>
+                    <Input
+                      id="end_time"
+                      type="time"
+                      className="mt-2"
+                      value={form.end_time}
+                      onChange={(e) => set("end_time", e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="notes">Observações</Label>
+                  <Textarea
+                    id="notes"
+                    className="mt-2"
+                    value={form.notes}
+                    onChange={(e) => set("notes", e.target.value)}
+                    maxLength={2000}
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setOpen(false)} disabled={busy}>
+                  Cancelar
+                </Button>
+                <Button onClick={() => void submit()} disabled={busy}>
+                  {busy ? "Criando..." : "Criar agendamento"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      <section className="mt-7 overflow-hidden rounded-lg border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Paciente</TableHead>
-              <TableHead>Profissional</TableHead>
-              <TableHead>Data/Horário</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.map((a) => (
-              <TableRow key={a.id}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <div className="grid size-9 place-items-center rounded-full bg-primary/10 text-primary">
-                      <CalendarClock className="size-4" />
-                    </div>
-                    <p className="font-medium">{a.patient_name}</p>
-                  </div>
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  {a.professional_name ?? "—"}
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  {formatWhen(a.starts_at, a.ends_at)}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={statusVariant[a.status] ?? "secondary"}>
-                    {statusLabel[a.status] ?? a.status}
-                  </Badge>
-                </TableCell>
+      {view === "list" ? (
+        <section className="mt-7 overflow-hidden rounded-lg border bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Paciente</TableHead>
+                <TableHead>Profissional</TableHead>
+                <TableHead>Data/Horário</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        {items.length === 0 && (
-          <div className="grid min-h-80 place-items-center px-5 py-14 text-center">
-            <div>
-              <div className="mx-auto grid size-14 place-items-center rounded-lg bg-primary/10 text-primary">
-                <CalendarClock className="size-6" />
+            </TableHeader>
+            <TableBody>
+              {items.map((a) => (
+                <TableRow key={a.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="grid size-9 place-items-center rounded-full bg-primary/10 text-primary">
+                        <CalendarClock className="size-4" />
+                      </div>
+                      <p className="font-medium">{a.patient_name}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {a.professional_name ?? "—"}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {formatWhen(a.starts_at, a.ends_at)}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={statusVariant[a.status] ?? "secondary"}>
+                      {statusLabel[a.status] ?? a.status}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          {items.length === 0 && (
+            <div className="grid min-h-80 place-items-center px-5 py-14 text-center">
+              <div>
+                <div className="mx-auto grid size-14 place-items-center rounded-lg bg-primary/10 text-primary">
+                  <CalendarClock className="size-6" />
+                </div>
+                <h2 className="mt-5 font-display text-xl font-semibold">
+                  Tudo pronto para começar
+                </h2>
+                <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
+                  Seus agendamentos aparecerão aqui, organizados para facilitar o dia a dia da
+                  equipe.
+                </p>
               </div>
-              <h2 className="mt-5 font-display text-xl font-semibold">Tudo pronto para começar</h2>
-              <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
-                Seus agendamentos aparecerão aqui, organizados para facilitar o dia a dia da equipe.
-              </p>
             </div>
+          )}
+        </section>
+      ) : (
+        <section className="mt-7 overflow-hidden rounded-lg border bg-card">
+          <div className="grid grid-cols-[56px_repeat(7,1fr)] border-b">
+            <div />
+            {weekDays.map((day) => {
+              const isToday = day.toDateString() === now.toDateString();
+              return (
+                <div
+                  key={day.toISOString()}
+                  className={`border-l px-2 py-3 text-center ${isToday ? "bg-primary/5" : ""}`}
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                    {day.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")}
+                  </p>
+                  <p
+                    className={`mt-1 text-lg font-semibold ${isToday ? "text-primary" : "text-foreground"}`}
+                  >
+                    {day.getDate()}
+                  </p>
+                </div>
+              );
+            })}
           </div>
-        )}
-      </section>
+          <div className="grid grid-cols-[56px_repeat(7,1fr)]">
+            <div className="relative">
+              {Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i).map(
+                (hour) => (
+                  <div
+                    key={hour}
+                    style={{ height: HOUR_HEIGHT }}
+                    className="border-t px-2 text-right text-xs text-muted-foreground first:border-t-0"
+                  >
+                    <span className="relative -top-2">{`${String(hour).padStart(2, "0")}:00`}</span>
+                  </div>
+                ),
+              )}
+            </div>
+            {weekDays.map((day, dayIndex) => {
+              const isToday = day.toDateString() === now.toDateString();
+              return (
+                <div
+                  key={day.toISOString()}
+                  className="relative border-l"
+                  style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT }}
+                >
+                  {Array.from({ length: END_HOUR - START_HOUR }, (_, i) => i).map((i) => (
+                    <div
+                      key={i}
+                      className="border-t first:border-t-0"
+                      style={{ height: HOUR_HEIGHT }}
+                    />
+                  ))}
+                  {isToday && nowMinutes >= START_HOUR * 60 && nowMinutes <= END_HOUR * 60 && (
+                    <div
+                      className="pointer-events-none absolute inset-x-0 z-10 border-t-2 border-destructive"
+                      style={{ top: ((nowMinutes - START_HOUR * 60) / 60) * HOUR_HEIGHT }}
+                    />
+                  )}
+                  {dayLayouts[dayIndex]?.map(({ appt, col, cols, startMin, endMin }) => {
+                    const top = Math.max(0, ((startMin - START_HOUR * 60) / 60) * HOUR_HEIGHT);
+                    const height = Math.max(
+                      18,
+                      ((Math.min(endMin, END_HOUR * 60) - Math.max(startMin, START_HOUR * 60)) /
+                        60) *
+                        HOUR_HEIGHT,
+                    );
+                    return (
+                      <div
+                        key={appt.id}
+                        className={`absolute overflow-hidden rounded-md border px-1.5 py-1 text-[11px] leading-tight shadow-xs ${statusBlockClass[appt.status] ?? statusBlockClass["scheduled"]}`}
+                        style={{
+                          top,
+                          height,
+                          left: `${(col / cols) * 100}%`,
+                          width: `calc(${100 / cols}% - 3px)`,
+                        }}
+                        title={`${appt.patient_name}${appt.procedure ? ` · ${appt.procedure}` : ""}`}
+                      >
+                        <p className="truncate font-semibold">{appt.patient_name}</p>
+                        {appt.procedure && <p className="truncate opacity-80">{appt.procedure}</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+          {items.length === 0 && (
+            <div className="grid min-h-40 place-items-center border-t px-5 py-10 text-center text-sm text-muted-foreground">
+              Seus agendamentos aparecerão aqui, organizados para facilitar o dia a dia da equipe.
+            </div>
+          )}
+        </section>
+      )}
     </AppShell>
   );
 }
