@@ -52,6 +52,14 @@ type Appointment = {
   starts_at: string;
   ends_at: string;
   status: string;
+  notes: string | null;
+};
+
+const statusLabel: Record<string, string> = {
+  scheduled: "Agendado",
+  confirmed: "Confirmado",
+  completed: "Concluído",
+  cancelled: "Cancelado",
 };
 
 const schema = z.object({
@@ -120,6 +128,17 @@ function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
 
+function formatDateTimeRange(startsAt: string, endsAt: string) {
+  const start = new Date(startsAt);
+  const date = start.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+  return `${date} · ${formatTime(startsAt)} – ${formatTime(endsAt)}`;
+}
+
 function capitalize(text: string) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
@@ -176,12 +195,13 @@ function Agenda() {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const set = (k: keyof typeof emptyForm, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const loadAppointments = async (organizationId: string) => {
     const { data } = await supabase
       .from("appointments")
-      .select("id, patient_name, procedure, professional_name, starts_at, ends_at, status")
+      .select("id, patient_name, procedure, professional_name, starts_at, ends_at, status, notes")
       .eq("organization_id", organizationId)
       .order("starts_at", { ascending: true });
     setItems(data ?? []);
@@ -579,6 +599,57 @@ function Agenda() {
         </div>
       </div>
 
+      <Dialog
+        open={selectedAppointment !== null}
+        onOpenChange={(next) => {
+          if (!next) setSelectedAppointment(null);
+        }}
+      >
+        <DialogContent>
+          {selectedAppointment && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{selectedAppointment.patient_name}</DialogTitle>
+                <DialogDescription>
+                  {formatDateTimeRange(selectedAppointment.starts_at, selectedAppointment.ends_at)}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Status</span>
+                  <span
+                    className={`rounded-full border px-2 py-0.5 text-xs font-medium ${statusBlockClass[selectedAppointment.status] ?? statusBlockClass["scheduled"]}`}
+                  >
+                    {statusLabel[selectedAppointment.status] ?? selectedAppointment.status}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between border-t pt-3">
+                  <span className="text-muted-foreground">Procedimento</span>
+                  <span className="font-medium">{selectedAppointment.procedure ?? "—"}</span>
+                </div>
+                <div className="flex items-center justify-between border-t pt-3">
+                  <span className="text-muted-foreground">Profissional</span>
+                  <span className="font-medium">
+                    {selectedAppointment.professional_name ?? "—"}
+                  </span>
+                </div>
+                {selectedAppointment.notes && (
+                  <div className="border-t pt-3">
+                    <p className="mb-1 text-muted-foreground">Observações</p>
+                    <p className="whitespace-pre-wrap">{selectedAppointment.notes}</p>
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setSelectedAppointment(null)}>
+                  Fechar
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {view === "month" ? (
         <section className="mt-7 overflow-hidden rounded-lg border bg-card">
           <div className="grid grid-cols-7 border-b">
@@ -618,13 +689,15 @@ function Agenda() {
                   </span>
                   <div className="mt-1 space-y-0.5">
                     {visible.map((a) => (
-                      <div
+                      <button
                         key={a.id}
+                        type="button"
                         title={`${formatTime(a.starts_at)} · ${a.patient_name}${a.procedure ? ` · ${a.procedure}` : ""}`}
-                        className={`truncate rounded px-1 py-0.5 text-[10px] leading-tight ${statusBlockClass[a.status] ?? statusBlockClass["scheduled"]}`}
+                        onClick={() => setSelectedAppointment(a)}
+                        className={`block w-full truncate rounded px-1 py-0.5 text-left text-[10px] leading-tight hover:opacity-80 ${statusBlockClass[a.status] ?? statusBlockClass["scheduled"]}`}
                       >
                         {formatTime(a.starts_at)} {a.patient_name}
-                      </div>
+                      </button>
                     ))}
                     {dayItems.length > visible.length && (
                       <p className="px-1 text-[10px] text-muted-foreground">
@@ -708,9 +781,11 @@ function Agenda() {
                         HOUR_HEIGHT,
                     );
                     return (
-                      <div
+                      <button
                         key={appt.id}
-                        className={`absolute overflow-hidden rounded-md border px-1.5 py-0.5 text-[10px] leading-tight shadow-xs ${statusBlockClass[appt.status] ?? statusBlockClass["scheduled"]}`}
+                        type="button"
+                        onClick={() => setSelectedAppointment(appt)}
+                        className={`absolute overflow-hidden rounded-md border px-1.5 py-0.5 text-left text-[10px] leading-tight shadow-xs hover:opacity-80 ${statusBlockClass[appt.status] ?? statusBlockClass["scheduled"]}`}
                         style={{
                           top,
                           height,
@@ -721,7 +796,7 @@ function Agenda() {
                       >
                         <p className="truncate font-semibold">{appt.patient_name}</p>
                         {appt.procedure && <p className="truncate opacity-80">{appt.procedure}</p>}
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
