@@ -1,12 +1,317 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Check, Building2, MapPin, Stethoscope, ArrowLeft, ArrowRight } from "lucide-react";
-import { useState, type ComponentType } from "react"; import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client"; import { Button } from "@/components/ui/button"; import { Input } from "@/components/ui/input"; import { Label } from "@/components/ui/label"; import { Select,SelectContent,SelectItem,SelectTrigger,SelectValue } from "@/components/ui/select";
-export const Route=createFileRoute("/_authenticated/onboarding")({head:()=>({meta:[{title:"Configure sua clínica — ClinicFlow AI"},{name:"description",content:"Cadastre sua clínica e unidade matriz."},{property:"og:title",content:"Configure sua clínica — ClinicFlow AI"},{property:"og:description",content:"Cadastre sua clínica e unidade matriz."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}]}),component:Onboarding});
-const schema=z.object({trade_name:z.string().trim().min(2).max(120),legal_name:z.string().trim().min(2).max(160),document:z.string().trim().min(11).max(18),specialty:z.enum(["aesthetics","dentistry","medicine"]),phone:z.string().trim().min(8).max(30),postal_code:z.string().trim().max(12),street:z.string().trim().max(160),number:z.string().trim().max(20),neighborhood:z.string().trim().max(80),city:z.string().trim().max(80),state:z.string().trim().length(2)});
-function Onboarding(){const navigate=useNavigate();const[step,setStep]=useState(1);const[busy,setBusy]=useState(false);const[error,setError]=useState("");const[f,setF]=useState({trade_name:"",legal_name:"",document:"",specialty:"aesthetics" as "aesthetics"|"dentistry"|"medicine",phone:"",postal_code:"",street:"",number:"",neighborhood:"",city:"",state:""});const set=(k:keyof typeof f,v:string)=>setF({...f,[k]:v});
-const finish=async()=>{setBusy(true);setError("");try{const v=schema.parse(f);const{data:a}=await supabase.auth.getUser();if(!a.user)throw new Error("Sessão expirada.");const{data:o,error:oe}=await supabase.from("organizations").insert({trade_name:v.trade_name,legal_name:v.legal_name,document:v.document.replace(/\D/g,""),specialty:v.specialty,phone:v.phone,created_by:a.user.id}).select("id").single();if(oe)throw oe;const{error:me}=await supabase.from("organization_members").insert({organization_id:o.id,user_id:a.user.id,role:"admin",status:"active"});if(me)throw me;const{error:ue}=await supabase.from("units").insert({organization_id:o.id,name:`${v.trade_name} — Matriz`,code:"MATRIZ",is_headquarters:true,phone:v.phone,postal_code:v.postal_code,street:v.street,number:v.number,neighborhood:v.neighborhood,city:v.city,state:v.state.toUpperCase()});if(ue)throw ue;window.localStorage.setItem("clinicflow-org",o.id);await navigate({to:"/dashboard"});}catch(x){setError(x instanceof z.ZodError?"Revise os campos obrigatórios.":x instanceof Error?x.message:"Não foi possível criar a clínica.");}finally{setBusy(false)}};
-const InputField=({id,label,type="text"}:{id:keyof typeof f,label:string,type?:string})=><div><Label htmlFor={id}>{label}</Label><Input id={id} type={type} className="mt-2 h-11" value={f[id]} onChange={e=>set(id,e.target.value)} maxLength={id==="legal_name"?160:120} required/></div>;
-return <main className="min-h-screen bg-muted/35"><header className="flex h-18 items-center border-b bg-background px-5 md:px-10"><div className="flex items-center gap-3"><div className="grid size-9 place-items-center rounded-lg bg-primary text-primary-foreground font-bold">C</div><span className="font-display text-lg font-semibold">ClinicFlow AI</span></div><span className="ml-auto text-sm text-muted-foreground">Configuração inicial</span></header><div className="mx-auto grid max-w-6xl gap-10 px-5 py-10 md:grid-cols-[260px_1fr] md:py-16">
-<aside><p className="text-xs font-bold uppercase tracking-[.14em] text-primary">Primeiros passos</p><h1 className="mt-3 font-display text-3xl font-semibold">Prepare sua clínica</h1><p className="mt-3 text-sm leading-relaxed text-muted-foreground">Leva menos de cinco minutos. Você poderá ajustar tudo depois.</p><div className="mt-8 space-y-1">{([[1,Building2,"Identificação"],[2,Stethoscope,"Operação"],[3,MapPin,"Unidade matriz"]] as Array<[number, ComponentType<{className?: string}>, string]>).map(([n,I,l])=><div key={String(n)} className={`flex items-center gap-3 rounded-md px-3 py-3 text-sm ${step===n?"bg-background font-semibold shadow-sm":"text-muted-foreground"}`}><div className={`grid size-8 place-items-center rounded-full ${step>Number(n)?"bg-success text-success-foreground":step===n?"bg-primary text-primary-foreground":"bg-muted"}`}>{step>Number(n)?<Check className="size-4"/>:<I className="size-4"/>}</div>{l}</div>)}</div></aside>
-<section className="rounded-lg border bg-card p-6 shadow-sm md:p-9"><div className="mb-8"><span className="text-xs font-semibold text-muted-foreground">ETAPA {step} DE 3</span><h2 className="mt-2 font-display text-2xl font-semibold">{step===1?"Como sua clínica se chama?":step===2?"Conte sobre sua operação":"Onde fica a unidade matriz?"}</h2></div><div className="grid gap-5 md:grid-cols-2">{step===1&&<><InputField id="trade_name" label="Nome fantasia"/><InputField id="legal_name" label="Razão social"/><InputField id="document" label="Documento / CNPJ"/></>}{step===2&&<><div><Label>Especialidade principal</Label><Select value={f.specialty} onValueChange={v=>set("specialty",v)}><SelectTrigger className="mt-2 h-11"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="aesthetics">Estética</SelectItem><SelectItem value="dentistry">Odontologia</SelectItem><SelectItem value="medicine">Medicina</SelectItem></SelectContent></Select></div><InputField id="phone" label="Telefone" type="tel"/></>}{step===3&&<><InputField id="postal_code" label="CEP"/><InputField id="street" label="Endereço"/><InputField id="number" label="Número"/><InputField id="neighborhood" label="Bairro"/><InputField id="city" label="Cidade"/><InputField id="state" label="UF"/></>}</div>{error&&<p className="mt-5 rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}<div className="mt-10 flex justify-between"><Button variant="ghost" disabled={step===1} onClick={()=>setStep(step-1)}><ArrowLeft/>Voltar</Button>{step<3?<Button onClick={()=>setStep(step+1)}>Continuar<ArrowRight/></Button>:<Button disabled={busy} onClick={()=>void finish()}>{busy?"Criando...":"Criar clínica"}<Check/></Button>}</div></section></div></main>}
+import { useState, type ComponentType } from "react";
+import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { formatPhoneBR } from "@/lib/format";
+import { getErrorMessage } from "@/lib/errors";
+export const Route = createFileRoute("/_authenticated/onboarding")({
+  head: () => ({
+    meta: [
+      { title: "Configure sua clínica — ClinicFlow AI" },
+      { name: "description", content: "Cadastre sua clínica e unidade matriz." },
+      { property: "og:title", content: "Configure sua clínica — ClinicFlow AI" },
+      { property: "og:description", content: "Cadastre sua clínica e unidade matriz." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: Onboarding,
+});
+const schema = z.object({
+  trade_name: z.string().trim().min(2).max(120),
+  legal_name: z.string().trim().min(2).max(160),
+  document: z.string().trim().min(11).max(18),
+  specialty: z.enum(["aesthetics", "dentistry", "medicine"]),
+  phone: z.string().trim().min(8).max(30),
+  postal_code: z.string().trim().max(12),
+  street: z.string().trim().max(160),
+  number: z.string().trim().max(20),
+  neighborhood: z.string().trim().max(80),
+  city: z.string().trim().max(80),
+  state: z.string().trim().length(2),
+});
+type OnboardingForm = {
+  trade_name: string;
+  legal_name: string;
+  document: string;
+  specialty: "aesthetics" | "dentistry" | "medicine";
+  phone: string;
+  postal_code: string;
+  street: string;
+  number: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+};
+function InputField({
+  id,
+  label,
+  type = "text",
+  value,
+  onChange,
+}: {
+  id: keyof OnboardingForm;
+  label: string;
+  type?: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <Label htmlFor={id}>{label}</Label>
+      <Input
+        id={id}
+        type={type}
+        className="mt-2 h-11"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        maxLength={id === "legal_name" ? 160 : 120}
+        required
+      />
+    </div>
+  );
+}
+function Onboarding() {
+  const navigate = useNavigate();
+  const [step, setStep] = useState(1);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [f, setF] = useState<OnboardingForm>({
+    trade_name: "",
+    legal_name: "",
+    document: "",
+    specialty: "aesthetics",
+    phone: "",
+    postal_code: "",
+    street: "",
+    number: "",
+    neighborhood: "",
+    city: "",
+    state: "",
+  });
+  const set = (k: keyof typeof f, v: string) => setF({ ...f, [k]: v });
+  const finish = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      const v = schema.parse(f);
+      const { data: a } = await supabase.auth.getUser();
+      if (!a.user) throw new Error("Sessão expirada.");
+      const { data: o, error: oe } = await supabase
+        .from("organizations")
+        .insert({
+          trade_name: v.trade_name,
+          legal_name: v.legal_name,
+          document: v.document.replace(/\D/g, ""),
+          specialty: v.specialty,
+          phone: v.phone,
+          created_by: a.user.id,
+        })
+        .select("id")
+        .single();
+      if (oe) throw oe;
+      const { error: me } = await supabase
+        .from("organization_members")
+        .insert({ organization_id: o.id, user_id: a.user.id, role: "admin", status: "active" });
+      if (me) throw me;
+      const { error: ue } = await supabase.from("units").insert({
+        organization_id: o.id,
+        name: `${v.trade_name} — Matriz`,
+        code: "MATRIZ",
+        is_headquarters: true,
+        phone: v.phone,
+        postal_code: v.postal_code,
+        street: v.street,
+        number: v.number,
+        neighborhood: v.neighborhood,
+        city: v.city,
+        state: v.state.toUpperCase(),
+      });
+      if (ue) throw ue;
+      window.localStorage.setItem("clinicflow-org", o.id);
+      await navigate({ to: "/dashboard" });
+    } catch (x) {
+      setError(getErrorMessage(x, "Não foi possível criar a clínica."));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <main className="min-h-screen bg-muted/35">
+      <header className="flex h-18 items-center border-b bg-background px-5 md:px-10">
+        <div className="flex items-center gap-3">
+          <div className="grid size-9 place-items-center rounded-lg bg-primary text-primary-foreground font-bold">
+            C
+          </div>
+          <span className="font-display text-lg font-semibold">ClinicFlow AI</span>
+        </div>
+        <span className="ml-auto text-sm text-muted-foreground">Configuração inicial</span>
+      </header>
+      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-10 md:grid-cols-[260px_1fr] md:py-16">
+        <aside>
+          <p className="text-xs font-bold uppercase tracking-[.14em] text-primary">
+            Primeiros passos
+          </p>
+          <h1 className="mt-3 font-display text-3xl font-semibold">Prepare sua clínica</h1>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            Leva menos de cinco minutos. Você poderá ajustar tudo depois.
+          </p>
+          <div className="mt-8 space-y-1">
+            {(
+              [
+                [1, Building2, "Identificação"],
+                [2, Stethoscope, "Operação"],
+                [3, MapPin, "Unidade matriz"],
+              ] as Array<[number, ComponentType<{ className?: string }>, string]>
+            ).map(([n, I, l]) => (
+              <div
+                key={String(n)}
+                className={`flex items-center gap-3 rounded-md px-3 py-3 text-sm ${step === n ? "bg-background font-semibold shadow-sm" : "text-muted-foreground"}`}
+              >
+                <div
+                  className={`grid size-8 place-items-center rounded-full ${step > Number(n) ? "bg-success text-success-foreground" : step === n ? "bg-primary text-primary-foreground" : "bg-muted"}`}
+                >
+                  {step > Number(n) ? <Check className="size-4" /> : <I className="size-4" />}
+                </div>
+                {l}
+              </div>
+            ))}
+          </div>
+        </aside>
+        <section className="rounded-lg border bg-card p-6 shadow-sm md:p-9">
+          <div className="mb-8">
+            <span className="text-xs font-semibold text-muted-foreground">ETAPA {step} DE 3</span>
+            <h2 className="mt-2 font-display text-2xl font-semibold">
+              {step === 1
+                ? "Como sua clínica se chama?"
+                : step === 2
+                  ? "Conte sobre sua operação"
+                  : "Onde fica a unidade matriz?"}
+            </h2>
+          </div>
+          <div className="grid gap-5 md:grid-cols-2">
+            {step === 1 && (
+              <>
+                <InputField
+                  id="trade_name"
+                  label="Nome fantasia"
+                  value={f.trade_name}
+                  onChange={(v) => set("trade_name", v)}
+                />
+                <InputField
+                  id="legal_name"
+                  label="Razão social"
+                  value={f.legal_name}
+                  onChange={(v) => set("legal_name", v)}
+                />
+                <InputField
+                  id="document"
+                  label="Documento / CNPJ"
+                  value={f.document}
+                  onChange={(v) => set("document", v)}
+                />
+              </>
+            )}
+            {step === 2 && (
+              <>
+                <div>
+                  <Label>Especialidade principal</Label>
+                  <Select value={f.specialty} onValueChange={(v) => set("specialty", v)}>
+                    <SelectTrigger className="mt-2 h-11">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="aesthetics">Estética</SelectItem>
+                      <SelectItem value="dentistry">Odontologia</SelectItem>
+                      <SelectItem value="medicine">Medicina</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <InputField
+                  id="phone"
+                  label="Telefone"
+                  type="tel"
+                  value={f.phone}
+                  onChange={(v) => set("phone", formatPhoneBR(v))}
+                />
+              </>
+            )}
+            {step === 3 && (
+              <>
+                <InputField
+                  id="postal_code"
+                  label="CEP"
+                  value={f.postal_code}
+                  onChange={(v) => set("postal_code", v)}
+                />
+                <InputField
+                  id="street"
+                  label="Endereço"
+                  value={f.street}
+                  onChange={(v) => set("street", v)}
+                />
+                <InputField
+                  id="number"
+                  label="Número"
+                  value={f.number}
+                  onChange={(v) => set("number", v)}
+                />
+                <InputField
+                  id="neighborhood"
+                  label="Bairro"
+                  value={f.neighborhood}
+                  onChange={(v) => set("neighborhood", v)}
+                />
+                <InputField
+                  id="city"
+                  label="Cidade"
+                  value={f.city}
+                  onChange={(v) => set("city", v)}
+                />
+                <InputField
+                  id="state"
+                  label="UF"
+                  value={f.state}
+                  onChange={(v) => set("state", v)}
+                />
+              </>
+            )}
+          </div>
+          {error && (
+            <p className="mt-5 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          <div className="mt-10 flex justify-between">
+            <Button variant="ghost" disabled={step === 1} onClick={() => setStep(step - 1)}>
+              <ArrowLeft />
+              Voltar
+            </Button>
+            {step < 3 ? (
+              <Button onClick={() => setStep(step + 1)}>
+                Continuar
+                <ArrowRight />
+              </Button>
+            ) : (
+              <Button disabled={busy} onClick={() => void finish()}>
+                {busy ? "Criando..." : "Criar clínica"}
+                <Check />
+              </Button>
+            )}
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}

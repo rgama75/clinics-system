@@ -1,3 +1,71 @@
-import { createFileRoute, notFound } from "@tanstack/react-router"; import { Plus, Search, SlidersHorizontal } from "lucide-react"; import { AppShell } from "@/components/clinicflow/AppShell"; import { modules } from "@/lib/clinicflow"; import { Button } from "@/components/ui/button"; import { Input } from "@/components/ui/input";
-export const Route=createFileRoute("/_authenticated/$module")({beforeLoad:({params})=>{if(!modules.some(m=>m.slug===params.module))throw notFound()},head:({params})=>{const m=modules.find(x=>x.slug===params.module);const title=`${m?.label??"Módulo"} — ClinicFlow AI`;const description=m?.copy??"Gestão integrada da clínica.";return{meta:[{title},{name:"description",content:description},{property:"og:title",content:title},{property:"og:description",content:description},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}]}},component:ModulePage});
-function ModulePage(){const{module}=Route.useParams();const m=modules.find(x=>x.slug===module);if(!m)return null;const Icon=m.icon;return <AppShell title={m.label}><div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><p className="max-w-xl text-sm text-muted-foreground">{m.copy}</p><Button><Plus/>{m.action}</Button></div><section className="mt-7 overflow-hidden rounded-lg border bg-card"><div className="flex flex-col gap-3 border-b p-4 sm:flex-row"><div className="relative max-w-md flex-1"><Search className="absolute left-3 top-3 size-4 text-muted-foreground"/><Input className="pl-9" placeholder={`Buscar em ${m.label.toLowerCase()}...`}/></div><Button variant="outline"><SlidersHorizontal/>Filtros</Button></div><div className="grid min-h-80 place-items-center px-5 py-14 text-center"><div><div className="mx-auto grid size-14 place-items-center rounded-lg bg-primary/10 text-primary"><Icon className="size-6"/></div><h2 className="mt-5 font-display text-xl font-semibold">Tudo pronto para começar</h2><p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">Seus registros aparecerão aqui, organizados para facilitar o dia a dia da equipe.</p><Button className="mt-6"><Plus/>{m.action}</Button></div></div></section></AppShell>}
+import { createFileRoute, notFound } from "@tanstack/react-router";
+import { Plus, Search, SlidersHorizontal } from "lucide-react";
+import { AppShell } from "@/components/clinicflow/AppShell";
+import { modules } from "@/lib/clinicflow";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+export const Route = createFileRoute("/_authenticated/$module")({
+  beforeLoad: ({ params }) => {
+    if (!modules.some((m) => m.slug === params.module)) throw notFound();
+  },
+  head: ({ params }) => {
+    const m = modules.find((x) => x.slug === params.module);
+    const title = `${m?.label ?? "Módulo"} — ClinicFlow AI`;
+    const description = m?.copy ?? "Gestão integrada da clínica.";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+    };
+  },
+  component: ModulePage,
+});
+function ModulePage() {
+  const { module } = Route.useParams();
+  const m = modules.find((x) => x.slug === module);
+  if (!m) return null;
+  const Icon = m.icon;
+  return (
+    <AppShell title={m.label}>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="max-w-xl text-sm text-muted-foreground">{m.copy}</p>
+        <Button>
+          <Plus />
+          {m.action}
+        </Button>
+      </div>
+      <section className="mt-7 overflow-hidden rounded-lg border bg-card">
+        <div className="flex flex-col gap-3 border-b p-4 sm:flex-row">
+          <div className="relative max-w-md flex-1">
+            <Search className="absolute left-3 top-3 size-4 text-muted-foreground" />
+            <Input className="pl-9" placeholder={`Buscar em ${m.label.toLowerCase()}...`} />
+          </div>
+          <Button variant="outline">
+            <SlidersHorizontal />
+            Filtros
+          </Button>
+        </div>
+        <div className="grid min-h-80 place-items-center px-5 py-14 text-center">
+          <div>
+            <div className="mx-auto grid size-14 place-items-center rounded-lg bg-primary/10 text-primary">
+              <Icon className="size-6" />
+            </div>
+            <h2 className="mt-5 font-display text-xl font-semibold">Tudo pronto para começar</h2>
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
+              Seus registros aparecerão aqui, organizados para facilitar o dia a dia da equipe.
+            </p>
+            <Button className="mt-6">
+              <Plus />
+              {m.action}
+            </Button>
+          </div>
+        </div>
+      </section>
+    </AppShell>
+  );
+}
