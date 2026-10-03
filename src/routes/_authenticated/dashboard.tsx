@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
+  ArrowDownRight,
   ArrowUpRight,
   CalendarCheck,
   CheckCircle2,
@@ -13,6 +14,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/clinicflow/AppShell";
 import { Button } from "@/components/ui/button";
+
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
@@ -29,10 +31,65 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   }),
   component: Dashboard,
 });
+
+type TodayAppointment = {
+  id: string;
+  patient_name: string;
+  procedure: string | null;
+  professional_name: string | null;
+  starts_at: string;
+  status: string;
+};
+
+const statusLabel: Record<string, string> = {
+  scheduled: "Agendado",
+  confirmed: "Confirmado",
+  completed: "Concluído",
+  cancelled: "Cancelado",
+};
+
+const statusPillClass: Record<string, string> = {
+  scheduled: "bg-warning/12 text-warning",
+  confirmed: "bg-success/10 text-success",
+  completed: "bg-muted text-muted-foreground",
+  cancelled: "bg-destructive/10 text-destructive",
+};
+
+const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+
+function greeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Bom dia";
+  if (hour < 18) return "Boa tarde";
+  return "Boa noite";
+}
+
+function startOfDay(date: Date) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function addDays(date: Date, n: number) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+
 function Dashboard() {
   const [orgCount, setOrgCount] = useState(0);
   const [units, setUnits] = useState(0);
   const [members, setMembers] = useState(0);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [todayAppointments, setTodayAppointments] = useState<TodayAppointment[]>([]);
+  const [todayDelta, setTodayDelta] = useState(0);
+  const [patientCount, setPatientCount] = useState(0);
+  const [newPatientsThisMonth, setNewPatientsThisMonth] = useState(0);
+  const [revenueThisMonth, setRevenueThisMonth] = useState(0);
+  const [revenueDeltaPct, setRevenueDeltaPct] = useState<number | null>(null);
+  const [attendanceRate, setAttendanceRate] = useState<number | null>(null);
+  const [attendanceDeltaPp, setAttendanceDeltaPp] = useState<number | null>(null);
+
   useEffect(() => {
     void (async () => {
       const { data: u } = await supabase.auth.getUser();
@@ -44,22 +101,120 @@ function Dashboard() {
         .eq("status", "active");
       setOrgCount(o?.length ?? 0);
       const ids = o?.map((x) => x.organization_id) ?? [];
-      if (ids.length) {
-        const [{ count: uc }, { count: mc }] = await Promise.all([
-          supabase
-            .from("units")
-            .select("id", { count: "exact", head: true })
-            .in("organization_id", ids),
-          supabase
-            .from("organization_members")
-            .select("id", { count: "exact", head: true })
-            .in("organization_id", ids),
-        ]);
-        setUnits(uc ?? 0);
-        setMembers(mc ?? 0);
-      }
+      if (ids.length === 0) return;
+      const [{ count: uc }, { count: mc }] = await Promise.all([
+        supabase
+          .from("units")
+          .select("id", { count: "exact", head: true })
+          .in("organization_id", ids),
+        supabase
+          .from("organization_members")
+          .select("id", { count: "exact", head: true })
+          .in("organization_id", ids),
+      ]);
+      setUnits(uc ?? 0);
+      setMembers(mc ?? 0);
+
+      const now = new Date();
+      const todayStart = startOfDay(now);
+      const todayEnd = addDays(todayStart, 1);
+      const yesterdayStart = addDays(todayStart, -1);
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const window30Start = addDays(now, -30);
+      const window60Start = addDays(now, -60);
+
+      const [
+        { data: todays },
+        { count: yesterdayCount },
+        { count: totalPatients },
+        { count: newPatients },
+        { data: incomeThisMonth },
+        { data: incomeLastMonth },
+        { data: recentAppts },
+        { data: priorAppts },
+      ] = await Promise.all([
+        supabase
+          .from("appointments")
+          .select("id, patient_name, procedure, professional_name, starts_at, status")
+          .in("organization_id", ids)
+          .gte("starts_at", todayStart.toISOString())
+          .lt("starts_at", todayEnd.toISOString())
+          .order("starts_at", { ascending: true }),
+        supabase
+          .from("appointments")
+          .select("id", { count: "exact", head: true })
+          .in("organization_id", ids)
+          .gte("starts_at", yesterdayStart.toISOString())
+          .lt("starts_at", todayStart.toISOString()),
+        supabase
+          .from("patients")
+          .select("id", { count: "exact", head: true })
+          .in("organization_id", ids),
+        supabase
+          .from("patients")
+          .select("id", { count: "exact", head: true })
+          .in("organization_id", ids)
+          .gte("created_at", monthStart.toISOString()),
+        supabase
+          .from("financial_entries")
+          .select("amount")
+          .in("organization_id", ids)
+          .eq("entry_type", "income")
+          .gte("created_at", monthStart.toISOString()),
+        supabase
+          .from("financial_entries")
+          .select("amount")
+          .in("organization_id", ids)
+          .eq("entry_type", "income")
+          .gte("created_at", lastMonthStart.toISOString())
+          .lt("created_at", monthStart.toISOString()),
+        supabase
+          .from("appointments")
+          .select("status")
+          .in("organization_id", ids)
+          .in("status", ["completed", "cancelled"])
+          .gte("starts_at", window30Start.toISOString())
+          .lt("starts_at", now.toISOString()),
+        supabase
+          .from("appointments")
+          .select("status")
+          .in("organization_id", ids)
+          .in("status", ["completed", "cancelled"])
+          .gte("starts_at", window60Start.toISOString())
+          .lt("starts_at", window30Start.toISOString()),
+      ]);
+
+      setTodayAppointments(todays ?? []);
+      setTodayDelta((todays?.length ?? 0) - (yesterdayCount ?? 0));
+      setPatientCount(totalPatients ?? 0);
+      setNewPatientsThisMonth(newPatients ?? 0);
+
+      const sumAmount = (rows: { amount: number }[] | null) =>
+        (rows ?? []).reduce((sum, r) => sum + Number(r.amount), 0);
+      const thisMonthSum = sumAmount(incomeThisMonth);
+      const lastMonthSum = sumAmount(incomeLastMonth);
+      setRevenueThisMonth(thisMonthSum);
+      setRevenueDeltaPct(
+        lastMonthSum > 0 ? ((thisMonthSum - lastMonthSum) / lastMonthSum) * 100 : null,
+      );
+
+      const rate = (rows: { status: string }[] | null) => {
+        const list = rows ?? [];
+        if (list.length === 0) return null;
+        return (list.filter((r) => r.status === "completed").length / list.length) * 100;
+      };
+      const recentRate = rate(recentAppts);
+      const priorRate = rate(priorAppts);
+      setAttendanceRate(recentRate);
+      setAttendanceDeltaPp(
+        recentRate !== null && priorRate !== null ? recentRate - priorRate : null,
+      );
+
+      setLoadingStats(false);
     })();
   }, []);
+
   if (!orgCount)
     return (
       <AppShell title="Visão geral">
@@ -79,29 +234,75 @@ function Dashboard() {
         </div>
       </AppShell>
     );
-  const cards: Array<[string, string, string, typeof CalendarCheck]> = [
-    ["Agendamentos hoje", "12", "+ 8%", CalendarCheck],
-    ["Pacientes ativos", "248", "+ 14", UsersRound],
-    ["Receita no mês", "R$ 48,2 mil", "+ 12%", DollarSign],
-    ["Taxa de ocupação", "78%", "+ 5%", Clock3],
+
+  const cards: Array<{
+    label: string;
+    value: string;
+    delta: string | null;
+    deltaDown?: boolean;
+    icon: typeof CalendarCheck;
+  }> = [
+    {
+      label: "Agendamentos hoje",
+      value: String(todayAppointments.length),
+      delta:
+        todayDelta === 0 ? "Igual a ontem" : `${todayDelta > 0 ? "+" : ""}${todayDelta} vs ontem`,
+      deltaDown: todayDelta < 0,
+      icon: CalendarCheck,
+    },
+    {
+      label: "Pacientes cadastrados",
+      value: String(patientCount),
+      delta: `+${newPatientsThisMonth} este mês`,
+      icon: UsersRound,
+    },
+    {
+      label: "Receita no mês",
+      value: currency.format(revenueThisMonth),
+      delta:
+        revenueDeltaPct === null
+          ? null
+          : `${revenueDeltaPct >= 0 ? "+" : ""}${revenueDeltaPct.toFixed(0)}%`,
+      deltaDown: (revenueDeltaPct ?? 0) < 0,
+      icon: DollarSign,
+    },
+    {
+      label: "Taxa de comparecimento",
+      value: attendanceRate === null ? "—" : `${Math.round(attendanceRate)}%`,
+      delta:
+        attendanceDeltaPp === null
+          ? null
+          : `${attendanceDeltaPp >= 0 ? "+" : ""}${attendanceDeltaPp.toFixed(0)} p.p.`,
+      deltaDown: (attendanceDeltaPp ?? 0) < 0,
+      icon: Clock3,
+    },
   ];
+
   return (
-    <AppShell title="Visão geral" eyebrow="Bom dia">
+    <AppShell title="Visão geral" eyebrow={greeting()}>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {cards.map(([l, v, d, I]) => (
-          <div key={String(l)} className="rounded-lg border bg-card p-5 shadow-xs">
+        {cards.map((c) => (
+          <div key={c.label} className="rounded-lg border bg-card p-5 shadow-xs">
             <div className="flex items-start justify-between">
-              <span className="text-sm text-muted-foreground">{l}</span>
+              <span className="text-sm text-muted-foreground">{c.label}</span>
               <div className="grid size-9 place-items-center rounded-md bg-primary/10 text-primary">
-                <I className="size-4" />
+                <c.icon className="size-4" />
               </div>
             </div>
             <div className="mt-5 flex items-end justify-between">
-              <b className="font-display text-2xl">{v}</b>
-              <span className="flex items-center text-xs font-semibold text-success">
-                <ArrowUpRight className="size-3" />
-                {d}
-              </span>
+              <b className="font-display text-2xl">{loadingStats ? "…" : c.value}</b>
+              {c.delta && !loadingStats && (
+                <span
+                  className={`flex items-center text-xs font-semibold ${c.deltaDown ? "text-destructive" : "text-success"}`}
+                >
+                  {c.deltaDown ? (
+                    <ArrowDownRight className="size-3" />
+                  ) : (
+                    <ArrowUpRight className="size-3" />
+                  )}
+                  {c.delta}
+                </span>
+              )}
             </div>
           </div>
         ))}
@@ -114,34 +315,40 @@ function Dashboard() {
               <p className="text-sm text-muted-foreground">Próximos atendimentos da unidade</p>
             </div>
             <Button asChild variant="outline" size="sm">
-              <Link to="/$module" params={{ module: "agenda" }}>
-                Ver agenda
-              </Link>
+              <Link to="/agenda">Ver agenda</Link>
             </Button>
           </div>
           <div className="mt-6 space-y-2">
-            {[
-              ["09:00", "Marina Alves", "Avaliação facial", "Confirmado"],
-              ["10:30", "Paulo Mendes", "Consulta de retorno", "Aguardando"],
-              ["13:00", "Camila Rocha", "Procedimento estético", "Confirmado"],
-              ["15:30", "Renata Dias", "Avaliação inicial", "Confirmado"],
-            ].map((a, i) => (
-              <div
-                key={a[0]}
-                className="grid grid-cols-[56px_1fr_auto] items-center gap-4 border-b py-4 last:border-0"
-              >
-                <span className="text-sm font-semibold">{a[0]}</span>
-                <div>
-                  <p className="text-sm font-medium">{a[1]}</p>
-                  <p className="text-xs text-muted-foreground">{a[2]}</p>
-                </div>
-                <span
-                  className={`hidden rounded-full px-2.5 py-1 text-xs sm:block ${i === 1 ? "bg-warning/12 text-warning" : "bg-success/10 text-success"}`}
+            {todayAppointments.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                {loadingStats ? "Carregando..." : "Nenhum agendamento para hoje."}
+              </p>
+            ) : (
+              todayAppointments.map((a) => (
+                <div
+                  key={a.id}
+                  className="grid grid-cols-[56px_1fr_auto] items-center gap-4 border-b py-4 last:border-0"
                 >
-                  {a[3]}
-                </span>
-              </div>
-            ))}
+                  <span className="text-sm font-semibold">
+                    {new Date(a.starts_at).toLocaleTimeString("pt-BR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium">{a.patient_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {a.procedure ?? a.professional_name ?? "—"}
+                    </p>
+                  </div>
+                  <span
+                    className={`hidden rounded-full px-2.5 py-1 text-xs sm:block ${statusPillClass[a.status] ?? statusPillClass["scheduled"]}`}
+                  >
+                    {statusLabel[a.status] ?? a.status}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </section>
         <section className="rounded-lg border bg-card p-6">
