@@ -6,7 +6,7 @@ import { z } from "zod";
 import { AppShell } from "@/components/clinicflow/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganizationId } from "@/hooks/use-organization-id";
-import { getErrorMessage } from "@/lib/errors";
+import { getErrorMessage, getFunctionErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -117,8 +117,9 @@ function Equipe() {
         body: { invitationId: invitation.id, siteUrl: window.location.origin },
       });
       if (fnError) {
+        const detail = await getFunctionErrorMessage(fnError);
         toast.warning(
-          "Convite registrado, mas o e-mail não pôde ser enviado. Tente reenviar mais tarde.",
+          `Convite registrado, mas o e-mail não pôde ser enviado${detail ? `: ${detail}` : ""}.`,
         );
       } else {
         toast.success("Convite enviado com sucesso.");
