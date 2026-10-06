@@ -353,6 +353,123 @@ export type Database = {
           },
         ];
       };
+      crm_project_sessions: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          deleted_at: string | null;
+          id: string;
+          notes: string | null;
+          organization_id: string;
+          project_id: string;
+          scheduled_at: string;
+          session_number: number;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          deleted_at?: string | null;
+          id?: string;
+          notes?: string | null;
+          organization_id: string;
+          project_id: string;
+          scheduled_at: string;
+          session_number: number;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          deleted_at?: string | null;
+          id?: string;
+          notes?: string | null;
+          organization_id?: string;
+          project_id?: string;
+          scheduled_at?: string;
+          session_number?: number;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "crm_project_sessions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "crm_project_sessions_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "crm_projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      crm_projects: {
+        Row: {
+          client_id: string;
+          created_at: string;
+          created_by: string;
+          deleted_at: string | null;
+          id: string;
+          name: string;
+          notes: string | null;
+          organization_id: string;
+          planned_sessions: number | null;
+          procedure: string;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          client_id: string;
+          created_at?: string;
+          created_by: string;
+          deleted_at?: string | null;
+          id?: string;
+          name: string;
+          notes?: string | null;
+          organization_id: string;
+          planned_sessions?: number | null;
+          procedure: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          client_id?: string;
+          created_at?: string;
+          created_by?: string;
+          deleted_at?: string | null;
+          id?: string;
+          name?: string;
+          notes?: string | null;
+          organization_id?: string;
+          planned_sessions?: number | null;
+          procedure?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "crm_projects_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "crm_clients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "crm_projects_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       evaluations: {
         Row: {
           created_at: string;
