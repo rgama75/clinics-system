@@ -36,6 +36,7 @@ import { Route as AuthenticatedNakedClientesRouteImport } from './routes/_authen
 import { Route as AuthenticatedNakedCobrancasRouteImport } from './routes/_authenticated/naked/cobrancas'
 import { Route as AuthenticatedNakedLeadsRouteImport } from './routes/_authenticated/naked/leads'
 import { Route as AuthenticatedNakedProjetosRouteImport } from './routes/_authenticated/naked/projetos'
+import { Route as AuthenticatedNakedTarefasRouteImport } from './routes/_authenticated/naked/tarefas'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -177,6 +178,12 @@ const AuthenticatedNakedProjetosRoute =
     path: '/naked/projetos',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedNakedTarefasRoute =
+  AuthenticatedNakedTarefasRouteImport.update({
+    id: '/naked/tarefas',
+    path: '/naked/tarefas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -205,6 +212,7 @@ export interface FileRoutesByFullPath {
   '/naked/cobrancas': typeof AuthenticatedNakedCobrancasRoute
   '/naked/leads': typeof AuthenticatedNakedLeadsRoute
   '/naked/projetos': typeof AuthenticatedNakedProjetosRoute
+  '/naked/tarefas': typeof AuthenticatedNakedTarefasRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -233,6 +241,7 @@ export interface FileRoutesByTo {
   '/naked/cobrancas': typeof AuthenticatedNakedCobrancasRoute
   '/naked/leads': typeof AuthenticatedNakedLeadsRoute
   '/naked/projetos': typeof AuthenticatedNakedProjetosRoute
+  '/naked/tarefas': typeof AuthenticatedNakedTarefasRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -263,6 +272,7 @@ export interface FileRoutesById {
   '/_authenticated/naked/cobrancas': typeof AuthenticatedNakedCobrancasRoute
   '/_authenticated/naked/leads': typeof AuthenticatedNakedLeadsRoute
   '/_authenticated/naked/projetos': typeof AuthenticatedNakedProjetosRoute
+  '/_authenticated/naked/tarefas': typeof AuthenticatedNakedTarefasRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -293,6 +303,7 @@ export interface FileRouteTypes {
     | '/naked/cobrancas'
     | '/naked/leads'
     | '/naked/projetos'
+    | '/naked/tarefas'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -321,6 +332,7 @@ export interface FileRouteTypes {
     | '/naked/cobrancas'
     | '/naked/leads'
     | '/naked/projetos'
+    | '/naked/tarefas'
   id:
     | '__root__'
     | '/'
@@ -350,6 +362,7 @@ export interface FileRouteTypes {
     | '/_authenticated/naked/cobrancas'
     | '/_authenticated/naked/leads'
     | '/_authenticated/naked/projetos'
+    | '/_authenticated/naked/tarefas'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -551,6 +564,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNakedProjetosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/naked/tarefas': {
+      id: '/_authenticated/naked/tarefas'
+      path: '/naked/tarefas'
+      fullPath: '/naked/tarefas'
+      preLoaderRoute: typeof AuthenticatedNakedTarefasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -577,6 +597,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNakedCobrancasRoute: typeof AuthenticatedNakedCobrancasRoute
   AuthenticatedNakedLeadsRoute: typeof AuthenticatedNakedLeadsRoute
   AuthenticatedNakedProjetosRoute: typeof AuthenticatedNakedProjetosRoute
+  AuthenticatedNakedTarefasRoute: typeof AuthenticatedNakedTarefasRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -602,6 +623,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNakedCobrancasRoute: AuthenticatedNakedCobrancasRoute,
   AuthenticatedNakedLeadsRoute: AuthenticatedNakedLeadsRoute,
   AuthenticatedNakedProjetosRoute: AuthenticatedNakedProjetosRoute,
+  AuthenticatedNakedTarefasRoute: AuthenticatedNakedTarefasRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
