@@ -33,6 +33,7 @@ import { Route as AuthenticatedUnidadesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedVendasRouteImport } from './routes/_authenticated/vendas'
 import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
 import { Route as AuthenticatedNakedClientesRouteImport } from './routes/_authenticated/naked/clientes'
+import { Route as AuthenticatedNakedCobrancasRouteImport } from './routes/_authenticated/naked/cobrancas'
 import { Route as AuthenticatedNakedLeadsRouteImport } from './routes/_authenticated/naked/leads'
 import { Route as AuthenticatedNakedProjetosRouteImport } from './routes/_authenticated/naked/projetos'
 
@@ -159,6 +160,12 @@ const AuthenticatedNakedClientesRoute =
     path: '/naked/clientes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedNakedCobrancasRoute =
+  AuthenticatedNakedCobrancasRouteImport.update({
+    id: '/naked/cobrancas',
+    path: '/naked/cobrancas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedNakedLeadsRoute = AuthenticatedNakedLeadsRouteImport.update({
   id: '/naked/leads',
   path: '/naked/leads',
@@ -195,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/vendas': typeof AuthenticatedVendasRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/naked/clientes': typeof AuthenticatedNakedClientesRoute
+  '/naked/cobrancas': typeof AuthenticatedNakedCobrancasRoute
   '/naked/leads': typeof AuthenticatedNakedLeadsRoute
   '/naked/projetos': typeof AuthenticatedNakedProjetosRoute
 }
@@ -222,6 +230,7 @@ export interface FileRoutesByTo {
   '/vendas': typeof AuthenticatedVendasRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/naked/clientes': typeof AuthenticatedNakedClientesRoute
+  '/naked/cobrancas': typeof AuthenticatedNakedCobrancasRoute
   '/naked/leads': typeof AuthenticatedNakedLeadsRoute
   '/naked/projetos': typeof AuthenticatedNakedProjetosRoute
 }
@@ -251,6 +260,7 @@ export interface FileRoutesById {
   '/_authenticated/vendas': typeof AuthenticatedVendasRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/_authenticated/naked/clientes': typeof AuthenticatedNakedClientesRoute
+  '/_authenticated/naked/cobrancas': typeof AuthenticatedNakedCobrancasRoute
   '/_authenticated/naked/leads': typeof AuthenticatedNakedLeadsRoute
   '/_authenticated/naked/projetos': typeof AuthenticatedNakedProjetosRoute
 }
@@ -280,6 +290,7 @@ export interface FileRouteTypes {
     | '/vendas'
     | '/convite/$token'
     | '/naked/clientes'
+    | '/naked/cobrancas'
     | '/naked/leads'
     | '/naked/projetos'
   fileRoutesByTo: FileRoutesByTo
@@ -307,6 +318,7 @@ export interface FileRouteTypes {
     | '/vendas'
     | '/convite/$token'
     | '/naked/clientes'
+    | '/naked/cobrancas'
     | '/naked/leads'
     | '/naked/projetos'
   id:
@@ -335,6 +347,7 @@ export interface FileRouteTypes {
     | '/_authenticated/vendas'
     | '/convite/$token'
     | '/_authenticated/naked/clientes'
+    | '/_authenticated/naked/cobrancas'
     | '/_authenticated/naked/leads'
     | '/_authenticated/naked/projetos'
   fileRoutesById: FileRoutesById
@@ -517,6 +530,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNakedClientesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/naked/cobrancas': {
+      id: '/_authenticated/naked/cobrancas'
+      path: '/naked/cobrancas'
+      fullPath: '/naked/cobrancas'
+      preLoaderRoute: typeof AuthenticatedNakedCobrancasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/naked/leads': {
       id: '/_authenticated/naked/leads'
       path: '/naked/leads'
@@ -554,6 +574,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedUnidadesRoute: typeof AuthenticatedUnidadesRoute
   AuthenticatedVendasRoute: typeof AuthenticatedVendasRoute
   AuthenticatedNakedClientesRoute: typeof AuthenticatedNakedClientesRoute
+  AuthenticatedNakedCobrancasRoute: typeof AuthenticatedNakedCobrancasRoute
   AuthenticatedNakedLeadsRoute: typeof AuthenticatedNakedLeadsRoute
   AuthenticatedNakedProjetosRoute: typeof AuthenticatedNakedProjetosRoute
 }
@@ -578,6 +599,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedUnidadesRoute: AuthenticatedUnidadesRoute,
   AuthenticatedVendasRoute: AuthenticatedVendasRoute,
   AuthenticatedNakedClientesRoute: AuthenticatedNakedClientesRoute,
+  AuthenticatedNakedCobrancasRoute: AuthenticatedNakedCobrancasRoute,
   AuthenticatedNakedLeadsRoute: AuthenticatedNakedLeadsRoute,
   AuthenticatedNakedProjetosRoute: AuthenticatedNakedProjetosRoute,
 }
