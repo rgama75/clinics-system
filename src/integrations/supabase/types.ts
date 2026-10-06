@@ -115,6 +115,136 @@ export type Database = {
           },
         ];
       };
+      crm_charge_installments: {
+        Row: {
+          amount: number;
+          charge_id: string;
+          created_at: string;
+          created_by: string;
+          deleted_at: string | null;
+          due_date: string;
+          id: string;
+          installment_number: number;
+          notes: string | null;
+          organization_id: string;
+          paid_at: string | null;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          amount: number;
+          charge_id: string;
+          created_at?: string;
+          created_by: string;
+          deleted_at?: string | null;
+          due_date: string;
+          id?: string;
+          installment_number: number;
+          notes?: string | null;
+          organization_id: string;
+          paid_at?: string | null;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          amount?: number;
+          charge_id?: string;
+          created_at?: string;
+          created_by?: string;
+          deleted_at?: string | null;
+          due_date?: string;
+          id?: string;
+          installment_number?: number;
+          notes?: string | null;
+          organization_id?: string;
+          paid_at?: string | null;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "crm_charge_installments_charge_id_fkey";
+            columns: ["charge_id"];
+            isOneToOne: false;
+            referencedRelation: "crm_charges";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "crm_charge_installments_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      crm_charges: {
+        Row: {
+          client_id: string;
+          created_at: string;
+          created_by: string;
+          deleted_at: string | null;
+          description: string;
+          id: string;
+          notes: string | null;
+          organization_id: string;
+          project_id: string | null;
+          status: string;
+          total_amount: number;
+          updated_at: string;
+        };
+        Insert: {
+          client_id: string;
+          created_at?: string;
+          created_by: string;
+          deleted_at?: string | null;
+          description: string;
+          id?: string;
+          notes?: string | null;
+          organization_id: string;
+          project_id?: string | null;
+          status?: string;
+          total_amount: number;
+          updated_at?: string;
+        };
+        Update: {
+          client_id?: string;
+          created_at?: string;
+          created_by?: string;
+          deleted_at?: string | null;
+          description?: string;
+          id?: string;
+          notes?: string | null;
+          organization_id?: string;
+          project_id?: string | null;
+          status?: string;
+          total_amount?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "crm_charges_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "crm_clients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "crm_charges_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "crm_charges_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "crm_projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       crm_clients: {
         Row: {
           allergies: string;
@@ -1152,6 +1282,18 @@ export type Database = {
           _postal_code: string;
           _state: string;
           _street: string;
+        };
+        Returns: string;
+      };
+      crm_create_charge_with_installments: {
+        Args: {
+          _client_id: string;
+          _description: string;
+          _first_due_date: string;
+          _installments_count: number;
+          _notes: string | null;
+          _project_id: string | null;
+          _total_amount: number;
         };
         Returns: string;
       };

@@ -135,3 +135,51 @@ export type CrmProjectSession = {
   created_at: string;
   updated_at: string;
 };
+
+export type CrmChargeStatus = "ativa" | "cancelada";
+
+export const CRM_CHARGE_STATUSES: CrmChargeStatus[] = ["ativa", "cancelada"];
+
+export const CRM_CHARGE_STATUS_LABEL: Record<string, string> = {
+  ativa: "Ativa",
+  cancelada: "Cancelada",
+};
+
+export type CrmInstallmentStatus = "pendente" | "pago" | "cancelado";
+
+export const CRM_INSTALLMENT_STATUSES: CrmInstallmentStatus[] = ["pendente", "pago", "cancelado"];
+
+export const CRM_INSTALLMENT_STATUS_LABEL: Record<string, string> = {
+  pendente: "Pendente",
+  pago: "Pago",
+  cancelado: "Cancelado",
+};
+
+export type CrmCharge = {
+  id: string;
+  organization_id: string;
+  client_id: string;
+  project_id: string | null;
+  description: string;
+  total_amount: number;
+  status: string;
+  notes: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CrmChargeInstallment = {
+  id: string;
+  organization_id: string;
+  charge_id: string;
+  installment_number: number;
+  amount: number;
+  due_date: string;
+  status: string;
+  paid_at: string | null;
+  notes: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+};
