@@ -17,6 +17,7 @@ import {
   Settings2,
   Target,
   UserRoundCheck,
+  ClipboardList,
 } from "lucide-react";
 
 export const modules = [
@@ -111,4 +112,5 @@ export const dashboardItem = { slug: "dashboard", label: "Visão geral", icon: L
 export const nakedCrm = [
   { slug: "naked/leads", label: "Leads", icon: Target },
   { slug: "naked/clientes", label: "Clientes", icon: UserRoundCheck },
+  { slug: "naked/projetos", label: "Projetos", icon: ClipboardList },
 ];

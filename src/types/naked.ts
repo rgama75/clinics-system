@@ -82,3 +82,56 @@ export type CrmClient = {
   created_at: string;
   updated_at: string;
 };
+
+export type CrmProjectStatus = "em_andamento" | "concluido" | "cancelado";
+
+export const CRM_PROJECT_STATUSES: CrmProjectStatus[] = ["em_andamento", "concluido", "cancelado"];
+
+export const CRM_PROJECT_STATUS_LABEL: Record<string, string> = {
+  em_andamento: "Em andamento",
+  concluido: "Concluído",
+  cancelado: "Cancelado",
+};
+
+export type CrmProjectSessionStatus = "agendada" | "realizada" | "cancelada" | "falta";
+
+export const CRM_PROJECT_SESSION_STATUSES: CrmProjectSessionStatus[] = [
+  "agendada",
+  "realizada",
+  "cancelada",
+  "falta",
+];
+
+export const CRM_PROJECT_SESSION_STATUS_LABEL: Record<string, string> = {
+  agendada: "Agendada",
+  realizada: "Realizada",
+  cancelada: "Cancelada",
+  falta: "Falta",
+};
+
+export type CrmProject = {
+  id: string;
+  organization_id: string;
+  client_id: string;
+  name: string;
+  procedure: string;
+  status: string;
+  planned_sessions: number | null;
+  notes: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CrmProjectSession = {
+  id: string;
+  organization_id: string;
+  project_id: string;
+  session_number: number;
+  scheduled_at: string;
+  status: string;
+  notes: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+};
