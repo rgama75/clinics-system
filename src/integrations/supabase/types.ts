@@ -115,6 +115,87 @@ export type Database = {
           },
         ];
       };
+      crm_clients: {
+        Row: {
+          allergies: string;
+          birth_date: string;
+          city: string;
+          complement: string | null;
+          cpf: string;
+          created_at: string;
+          created_by: string;
+          deleted_at: string | null;
+          id: string;
+          lead_id: string;
+          name: string;
+          neighborhood: string;
+          number: string;
+          organization_id: string;
+          phone: string;
+          postal_code: string;
+          state: string;
+          street: string;
+          updated_at: string;
+        };
+        Insert: {
+          allergies: string;
+          birth_date: string;
+          city: string;
+          complement?: string | null;
+          cpf: string;
+          created_at?: string;
+          created_by: string;
+          deleted_at?: string | null;
+          id?: string;
+          lead_id: string;
+          name: string;
+          neighborhood: string;
+          number: string;
+          organization_id: string;
+          phone: string;
+          postal_code: string;
+          state: string;
+          street: string;
+          updated_at?: string;
+        };
+        Update: {
+          allergies?: string;
+          birth_date?: string;
+          city?: string;
+          complement?: string | null;
+          cpf?: string;
+          created_at?: string;
+          created_by?: string;
+          deleted_at?: string | null;
+          id?: string;
+          lead_id?: string;
+          name?: string;
+          neighborhood?: string;
+          number?: string;
+          organization_id?: string;
+          phone?: string;
+          postal_code?: string;
+          state?: string;
+          street?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "crm_clients_lead_id_fkey";
+            columns: ["lead_id"];
+            isOneToOne: true;
+            referencedRelation: "crm_leads";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "crm_clients_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       crm_contacts: {
         Row: {
           created_at: string;
@@ -941,6 +1022,22 @@ export type Database = {
     };
     Functions: {
       accept_invitation: { Args: { _token: string }; Returns: string };
+      crm_convert_lead_to_client: {
+        Args: {
+          _allergies: string;
+          _birth_date: string;
+          _city: string;
+          _complement: string | null;
+          _cpf: string;
+          _lead_id: string;
+          _neighborhood: string;
+          _number: string;
+          _postal_code: string;
+          _state: string;
+          _street: string;
+        };
+        Returns: string;
+      };
       get_invitation_by_token: {
         Args: { _token: string };
         Returns: {

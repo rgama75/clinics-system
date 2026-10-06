@@ -61,3 +61,24 @@ export type CrmContactHistoryEntry = {
   created_by: string;
   created_at: string;
 };
+
+export type CrmClient = {
+  id: string;
+  organization_id: string;
+  lead_id: string;
+  name: string;
+  phone: string;
+  cpf: string;
+  birth_date: string;
+  postal_code: string;
+  street: string;
+  number: string;
+  complement: string | null;
+  neighborhood: string;
+  city: string;
+  state: string;
+  allergies: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+};

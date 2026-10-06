@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { History, Plus, Search, Target } from "lucide-react";
+import { History, Plus, Search, Target, UserRoundCheck } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { AppShell } from "@/components/clinicflow/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganizationId } from "@/hooks/use-organization-id";
-import { formatPhoneBR } from "@/lib/format";
+import { formatCEP, formatCPF, formatPhoneBR, isValidCPF } from "@/lib/format";
 import { getErrorMessage } from "@/lib/errors";
 import { canAccessNaked } from "@/components/naked/access";
 import {
@@ -82,6 +82,42 @@ const schema = z.object({
 
 const emptyForm = { name: "", phone: "", procedure: "", source: "" };
 
+const convertSchema = z.object({
+  cpf: z
+    .string()
+    .trim()
+    .refine((v) => isValidCPF(v), "Informe um CPF válido."),
+  birth_date: z.string().min(1, "Informe a data de nascimento."),
+  postal_code: z
+    .string()
+    .trim()
+    .refine((v) => v.replace(/\D/g, "").length === 8, "Informe um CEP válido."),
+  street: z.string().trim().min(2, "Informe a rua.").max(160),
+  number: z.string().trim().min(1, "Informe o número.").max(20),
+  complement: z.string().trim().max(80).optional(),
+  neighborhood: z.string().trim().min(2, "Informe o bairro.").max(80),
+  city: z.string().trim().min(2, "Informe a cidade.").max(80),
+  state: z.string().trim().length(2, "Informe a UF (2 letras)."),
+  allergies: z
+    .string()
+    .trim()
+    .min(2, 'Informe as alergias conhecidas (ou "Nenhuma conhecida").')
+    .max(2000),
+});
+
+const emptyConvertForm = {
+  cpf: "",
+  birth_date: "",
+  postal_code: "",
+  street: "",
+  number: "",
+  complement: "",
+  neighborhood: "",
+  city: "",
+  state: "",
+  allergies: "",
+};
+
 const stageVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   novo: "secondary",
   em_contato: "outline",
@@ -122,6 +158,14 @@ function NakedLeads() {
     contact_type: "outro",
     notes: "",
   });
+
+  const [convertingLead, setConvertingLead] = useState<CrmLead | null>(null);
+  const [convertBusy, setConvertBusy] = useState(false);
+  const [convertForm, setConvertForm] = useState(emptyConvertForm);
+  const setConvert = <K extends keyof typeof emptyConvertForm>(
+    k: K,
+    v: (typeof emptyConvertForm)[K],
+  ) => setConvertForm((f) => ({ ...f, [k]: v }));
 
   const ensureProfiles = async (ids: string[]) => {
     const missing = Array.from(new Set(ids)).filter((id) => !profileNames.has(id));
@@ -253,6 +297,40 @@ function NakedLeads() {
       toast.error(getErrorMessage(err, "Não foi possível registrar o contato."));
     } finally {
       setHistoryBusy(false);
+    }
+  };
+
+  const openConvert = (lead: CrmLead) => {
+    setConvertingLead(lead);
+    setConvertForm(emptyConvertForm);
+  };
+
+  const submitConvert = async () => {
+    if (!convertingLead || !orgId) return;
+    setConvertBusy(true);
+    try {
+      const v = convertSchema.parse(convertForm);
+      const { error } = await supabase.rpc("crm_convert_lead_to_client", {
+        _lead_id: convertingLead.id,
+        _cpf: v.cpf,
+        _birth_date: v.birth_date,
+        _postal_code: v.postal_code,
+        _street: v.street,
+        _number: v.number,
+        _complement: v.complement || null,
+        _neighborhood: v.neighborhood,
+        _city: v.city,
+        _state: v.state.toUpperCase(),
+        _allergies: v.allergies,
+      });
+      if (error) throw error;
+      toast.success("Lead convertido em cliente com sucesso.");
+      setConvertingLead(null);
+      await loadLeads(orgId);
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Não foi possível converter o lead em cliente."));
+    } finally {
+      setConvertBusy(false);
     }
   };
 
@@ -447,14 +525,26 @@ function NakedLeads() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      aria-label="Ver histórico de contatos"
-                      onClick={() => openHistory(lead)}
-                    >
-                      <History />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        aria-label="Ver histórico de contatos"
+                        onClick={() => openHistory(lead)}
+                      >
+                        <History />
+                      </Button>
+                      {canManage && lead.stage !== "virou_cliente" && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          aria-label="Converter em cliente"
+                          onClick={() => openConvert(lead)}
+                        >
+                          <UserRoundCheck />
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -557,6 +647,154 @@ function NakedLeads() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setSelectedLead(null)}>
               Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={convertingLead !== null}
+        onOpenChange={(next) => !next && setConvertingLead(null)}
+      >
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Converter em cliente</DialogTitle>
+            <DialogDescription>
+              {convertingLead?.name} — complete os dados obrigatórios para concluir a conversão.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="cpf">CPF</Label>
+                <Input
+                  id="cpf"
+                  className="mt-2"
+                  value={convertForm.cpf}
+                  onChange={(e) => setConvert("cpf", formatCPF(e.target.value))}
+                  maxLength={14}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="birth_date">Data de nascimento</Label>
+                <Input
+                  id="birth_date"
+                  type="date"
+                  className="mt-2"
+                  value={convertForm.birth_date}
+                  onChange={(e) => setConvert("birth_date", e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label htmlFor="postal_code">CEP</Label>
+                <Input
+                  id="postal_code"
+                  className="mt-2"
+                  value={convertForm.postal_code}
+                  onChange={(e) => setConvert("postal_code", formatCEP(e.target.value))}
+                  maxLength={9}
+                  required
+                />
+              </div>
+              <div className="col-span-2">
+                <Label htmlFor="street">Rua</Label>
+                <Input
+                  id="street"
+                  className="mt-2"
+                  value={convertForm.street}
+                  onChange={(e) => setConvert("street", e.target.value)}
+                  maxLength={160}
+                  required
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="number">Número</Label>
+                <Input
+                  id="number"
+                  className="mt-2"
+                  value={convertForm.number}
+                  onChange={(e) => setConvert("number", e.target.value)}
+                  maxLength={20}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="complement">Complemento</Label>
+                <Input
+                  id="complement"
+                  className="mt-2"
+                  placeholder="Opcional"
+                  value={convertForm.complement}
+                  onChange={(e) => setConvert("complement", e.target.value)}
+                  maxLength={80}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="col-span-2">
+                <Label htmlFor="neighborhood">Bairro</Label>
+                <Input
+                  id="neighborhood"
+                  className="mt-2"
+                  value={convertForm.neighborhood}
+                  onChange={(e) => setConvert("neighborhood", e.target.value)}
+                  maxLength={80}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="state">UF</Label>
+                <Input
+                  id="state"
+                  className="mt-2"
+                  value={convertForm.state}
+                  onChange={(e) => setConvert("state", e.target.value.toUpperCase())}
+                  maxLength={2}
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="city">Cidade</Label>
+              <Input
+                id="city"
+                className="mt-2"
+                value={convertForm.city}
+                onChange={(e) => setConvert("city", e.target.value)}
+                maxLength={80}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="allergies">Alergias</Label>
+              <Textarea
+                id="allergies"
+                className="mt-2"
+                placeholder='Descreva alergias conhecidas, ou escreva "Nenhuma conhecida"'
+                value={convertForm.allergies}
+                onChange={(e) => setConvert("allergies", e.target.value)}
+                maxLength={2000}
+                rows={2}
+                required
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setConvertingLead(null)}
+              disabled={convertBusy}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={() => void submitConvert()} disabled={convertBusy}>
+              {convertBusy ? "Convertendo..." : "Converter em cliente"}
             </Button>
           </DialogFooter>
         </DialogContent>
