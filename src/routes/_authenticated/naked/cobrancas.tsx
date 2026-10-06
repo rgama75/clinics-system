@@ -13,6 +13,7 @@ import {
   CRM_CHARGE_STATUSES,
   CRM_INSTALLMENT_STATUS_LABEL,
   CRM_INSTALLMENT_STATUSES,
+  crmInstallmentIsOverdue,
   type CrmCharge,
   type CrmChargeInstallment,
 } from "@/types/naked";
@@ -100,14 +101,6 @@ const installmentStatusVariant: Record<
   pago: "default",
   cancelado: "destructive",
 };
-
-function todayISODate(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function isOverdue(installment: CrmChargeInstallment): boolean {
-  return installment.status === "pendente" && installment.due_date < todayISODate();
-}
 
 function NakedCobrancas() {
   const orgId = useOrganizationId();
@@ -620,7 +613,7 @@ function NakedCobrancas() {
                     {new Date(`${installment.due_date}T00:00:00`).toLocaleDateString("pt-BR")}
                   </p>
                 </div>
-                {isOverdue(installment) && (
+                {crmInstallmentIsOverdue(installment) && (
                   <p className="mt-1 text-xs font-semibold text-warning">Atrasada</p>
                 )}
                 {installment.notes && (

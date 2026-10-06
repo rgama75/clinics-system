@@ -19,6 +19,18 @@ export const CRM_LEAD_STAGE_LABEL: Record<string, string> = {
 /** Etapas ainda "em aberto" — usado para decidir se o destaque de lead parado se aplica. */
 export const CRM_LEAD_OPEN_STAGES: string[] = ["novo", "em_contato", "negociacao"];
 
+/** Dias sem contato (>=60 em etapa aberta) — só um destaque informativo, não muda a etapa. */
+export function crmLeadDaysStalled(lead: {
+  stage: string;
+  last_contact_date: string | null;
+  created_at: string;
+}): number | null {
+  if (!CRM_LEAD_OPEN_STAGES.includes(lead.stage)) return null;
+  const reference = lead.last_contact_date ?? lead.created_at;
+  const days = Math.floor((Date.now() - new Date(reference).getTime()) / 86_400_000);
+  return days >= 60 ? days : null;
+}
+
 export type CrmContactType = "ligacao" | "whatsapp" | "email" | "presencial" | "outro";
 
 export const CRM_CONTACT_TYPES: CrmContactType[] = [
@@ -184,6 +196,18 @@ export type CrmChargeInstallment = {
   updated_at: string;
 };
 
+export function crmTodayISODate(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** "Atrasada" não é um status gravado — é calculado aqui, igual ao "Parado há N dias". */
+export function crmInstallmentIsOverdue(installment: {
+  status: string;
+  due_date: string;
+}): boolean {
+  return installment.status === "pendente" && installment.due_date < crmTodayISODate();
+}
+
 export type CrmTaskStatus = "pendente" | "concluida" | "cancelada";
 
 export const CRM_TASK_STATUSES: CrmTaskStatus[] = ["pendente", "concluida", "cancelada"];
@@ -206,3 +230,7 @@ export type CrmTask = {
   created_at: string;
   updated_at: string;
 };
+
+export function crmTaskIsOverdue(task: { status: string; due_at: string | null }): boolean {
+  return task.status === "pendente" && task.due_at !== null && new Date(task.due_at) < new Date();
+}

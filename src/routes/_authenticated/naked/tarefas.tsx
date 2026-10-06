@@ -8,7 +8,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOrganizationId } from "@/hooks/use-organization-id";
 import { getErrorMessage } from "@/lib/errors";
 import { canAccessNaked } from "@/components/naked/access";
-import { CRM_TASK_STATUS_LABEL, CRM_TASK_STATUSES, type CrmTask } from "@/types/naked";
+import {
+  CRM_TASK_STATUS_LABEL,
+  CRM_TASK_STATUSES,
+  crmTaskIsOverdue,
+  type CrmTask,
+} from "@/types/naked";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,10 +64,6 @@ const schema = z.object({
 });
 
 const emptyForm = { title: "", description: "", due_at: "" };
-
-function isOverdue(task: CrmTask): boolean {
-  return task.status === "pendente" && task.due_at !== null && new Date(task.due_at) < new Date();
-}
 
 function NakedTarefas() {
   const orgId = useOrganizationId();
@@ -335,7 +336,7 @@ function NakedTarefas() {
                   <p className="text-muted-foreground">
                     {task.due_at ? new Date(task.due_at).toLocaleString("pt-BR") : "Sem prazo"}
                   </p>
-                  {isOverdue(task) && (
+                  {crmTaskIsOverdue(task) && (
                     <p className="mt-0.5 text-xs font-semibold text-warning">Atrasada</p>
                   )}
                 </TableCell>

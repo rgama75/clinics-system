@@ -12,9 +12,9 @@ import { canAccessNaked } from "@/components/naked/access";
 import {
   CRM_CONTACT_TYPE_LABEL,
   CRM_CONTACT_TYPES,
-  CRM_LEAD_OPEN_STAGES,
   CRM_LEAD_STAGE_LABEL,
   CRM_LEAD_STAGES,
+  crmLeadDaysStalled,
   type CrmContactHistoryEntry,
   type CrmContactType,
   type CrmLead,
@@ -125,13 +125,6 @@ const stageVariant: Record<string, "default" | "secondary" | "destructive" | "ou
   virou_cliente: "default",
   perdido: "destructive",
 };
-
-function daysStalled(lead: CrmLead): number | null {
-  if (!CRM_LEAD_OPEN_STAGES.includes(lead.stage)) return null;
-  const reference = lead.last_contact_date ?? lead.created_at;
-  const days = Math.floor((Date.now() - new Date(reference).getTime()) / 86_400_000);
-  return days >= 60 ? days : null;
-}
 
 function NakedLeads() {
   const orgId = useOrganizationId();
@@ -489,7 +482,7 @@ function NakedLeads() {
           </TableHeader>
           <TableBody>
             {filteredLeads.map((lead) => {
-              const stalled = daysStalled(lead);
+              const stalled = crmLeadDaysStalled(lead);
               return (
                 <TableRow key={lead.id}>
                   <TableCell>

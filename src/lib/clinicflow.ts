@@ -20,6 +20,7 @@ import {
   ClipboardList,
   Receipt,
   ListTodo,
+  Sun,
 } from "lucide-react";
 
 export const modules = [
@@ -112,6 +113,7 @@ export const dashboardItem = { slug: "dashboard", label: "Visão geral", icon: L
 
 // Naked CRM — telas novas em src/routes/_authenticated/naked/*, uma entrada por bloco entregue.
 export const nakedCrm = [
+  { slug: "naked/hoje", label: "Hoje", icon: Sun },
   { slug: "naked/leads", label: "Leads", icon: Target },
   { slug: "naked/clientes", label: "Clientes", icon: UserRoundCheck },
   { slug: "naked/projetos", label: "Projetos", icon: ClipboardList },
