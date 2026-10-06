@@ -19,6 +19,7 @@ import {
   UserRoundCheck,
   ClipboardList,
   Receipt,
+  ListTodo,
 } from "lucide-react";
 
 export const modules = [
@@ -115,4 +116,5 @@ export const nakedCrm = [
   { slug: "naked/clientes", label: "Clientes", icon: UserRoundCheck },
   { slug: "naked/projetos", label: "Projetos", icon: ClipboardList },
   { slug: "naked/cobrancas", label: "Cobranças", icon: Receipt },
+  { slug: "naked/tarefas", label: "Tarefas", icon: ListTodo },
 ];

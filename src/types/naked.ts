@@ -183,3 +183,26 @@ export type CrmChargeInstallment = {
   created_at: string;
   updated_at: string;
 };
+
+export type CrmTaskStatus = "pendente" | "concluida" | "cancelada";
+
+export const CRM_TASK_STATUSES: CrmTaskStatus[] = ["pendente", "concluida", "cancelada"];
+
+export const CRM_TASK_STATUS_LABEL: Record<string, string> = {
+  pendente: "Pendente",
+  concluida: "Concluída",
+  cancelada: "Cancelada",
+};
+
+export type CrmTask = {
+  id: string;
+  organization_id: string;
+  title: string;
+  description: string | null;
+  due_at: string | null;
+  status: string;
+  assigned_to: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+};

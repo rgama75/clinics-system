@@ -600,6 +600,56 @@ export type Database = {
           },
         ];
       };
+      crm_tasks: {
+        Row: {
+          assigned_to: string;
+          created_at: string;
+          created_by: string;
+          deleted_at: string | null;
+          description: string | null;
+          due_at: string | null;
+          id: string;
+          organization_id: string;
+          status: string;
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          assigned_to: string;
+          created_at?: string;
+          created_by: string;
+          deleted_at?: string | null;
+          description?: string | null;
+          due_at?: string | null;
+          id?: string;
+          organization_id: string;
+          status?: string;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          assigned_to?: string;
+          created_at?: string;
+          created_by?: string;
+          deleted_at?: string | null;
+          description?: string | null;
+          due_at?: string | null;
+          id?: string;
+          organization_id?: string;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "crm_tasks_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       evaluations: {
         Row: {
           created_at: string;
