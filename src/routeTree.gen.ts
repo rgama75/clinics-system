@@ -32,6 +32,7 @@ import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authentic
 import { Route as AuthenticatedUnidadesRouteImport } from './routes/_authenticated/unidades'
 import { Route as AuthenticatedVendasRouteImport } from './routes/_authenticated/vendas'
 import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
+import { Route as AuthenticatedNakedLeadsRouteImport } from './routes/_authenticated/naked/leads'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -150,6 +151,11 @@ const ConviteTokenRoute = ConviteTokenRouteImport.update({
   path: '/convite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedNakedLeadsRoute = AuthenticatedNakedLeadsRouteImport.update({
+  id: '/naked/leads',
+  path: '/naked/leads',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -174,6 +180,7 @@ export interface FileRoutesByFullPath {
   '/unidades': typeof AuthenticatedUnidadesRoute
   '/vendas': typeof AuthenticatedVendasRoute
   '/convite/$token': typeof ConviteTokenRoute
+  '/naked/leads': typeof AuthenticatedNakedLeadsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -198,6 +205,7 @@ export interface FileRoutesByTo {
   '/unidades': typeof AuthenticatedUnidadesRoute
   '/vendas': typeof AuthenticatedVendasRoute
   '/convite/$token': typeof ConviteTokenRoute
+  '/naked/leads': typeof AuthenticatedNakedLeadsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -224,6 +232,7 @@ export interface FileRoutesById {
   '/_authenticated/unidades': typeof AuthenticatedUnidadesRoute
   '/_authenticated/vendas': typeof AuthenticatedVendasRoute
   '/convite/$token': typeof ConviteTokenRoute
+  '/_authenticated/naked/leads': typeof AuthenticatedNakedLeadsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -250,6 +259,7 @@ export interface FileRouteTypes {
     | '/unidades'
     | '/vendas'
     | '/convite/$token'
+    | '/naked/leads'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -274,6 +284,7 @@ export interface FileRouteTypes {
     | '/unidades'
     | '/vendas'
     | '/convite/$token'
+    | '/naked/leads'
   id:
     | '__root__'
     | '/'
@@ -299,6 +310,7 @@ export interface FileRouteTypes {
     | '/_authenticated/unidades'
     | '/_authenticated/vendas'
     | '/convite/$token'
+    | '/_authenticated/naked/leads'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -472,6 +484,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/naked/leads': {
+      id: '/_authenticated/naked/leads'
+      path: '/naked/leads'
+      fullPath: '/naked/leads'
+      preLoaderRoute: typeof AuthenticatedNakedLeadsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -494,6 +513,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
   AuthenticatedUnidadesRoute: typeof AuthenticatedUnidadesRoute
   AuthenticatedVendasRoute: typeof AuthenticatedVendasRoute
+  AuthenticatedNakedLeadsRoute: typeof AuthenticatedNakedLeadsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -515,6 +535,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
   AuthenticatedUnidadesRoute: AuthenticatedUnidadesRoute,
   AuthenticatedVendasRoute: AuthenticatedVendasRoute,
+  AuthenticatedNakedLeadsRoute: AuthenticatedNakedLeadsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

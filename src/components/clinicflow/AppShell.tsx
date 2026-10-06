@@ -2,7 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Bell, Building2, ChevronDown, LogOut, Menu, Plus, Search } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { modules, administration, dashboardItem } from "@/lib/clinicflow";
+import { modules, administration, dashboardItem, nakedCrm } from "@/lib/clinicflow";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -113,6 +113,17 @@ export function AppShell({
         </p>
         {modules.map((item) => (
           <ModuleNavItem key={item.slug} item={item} active={pathname === `/${item.slug}`} />
+        ))}
+        <p className="mb-2 mt-6 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-sidebar-foreground/40">
+          Naked CRM
+        </p>
+        {nakedCrm.map((item) => (
+          <NavItem
+            key={item.slug}
+            item={item}
+            href={`/${item.slug}`}
+            active={pathname === `/${item.slug}`}
+          />
         ))}
         <p className="mb-2 mt-6 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-sidebar-foreground/40">
           Administração
