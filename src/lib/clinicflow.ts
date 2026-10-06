@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Building2,
   Settings2,
+  Target,
 } from "lucide-react";
 
 export const modules = [
@@ -104,3 +105,6 @@ export const administration = [
   { slug: "configuracoes", label: "Configurações", icon: Settings2 },
 ];
 export const dashboardItem = { slug: "dashboard", label: "Visão geral", icon: LayoutDashboard };
+
+// Naked CRM — telas novas em src/routes/_authenticated/naked/*, uma entrada por bloco entregue.
+export const nakedCrm = [{ slug: "naked/leads", label: "Leads", icon: Target }];
