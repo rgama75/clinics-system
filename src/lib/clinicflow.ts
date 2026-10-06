@@ -16,6 +16,7 @@ import {
   Building2,
   Settings2,
   Target,
+  UserRoundCheck,
 } from "lucide-react";
 
 export const modules = [
@@ -107,4 +108,7 @@ export const administration = [
 export const dashboardItem = { slug: "dashboard", label: "Visão geral", icon: LayoutDashboard };
 
 // Naked CRM — telas novas em src/routes/_authenticated/naked/*, uma entrada por bloco entregue.
-export const nakedCrm = [{ slug: "naked/leads", label: "Leads", icon: Target }];
+export const nakedCrm = [
+  { slug: "naked/leads", label: "Leads", icon: Target },
+  { slug: "naked/clientes", label: "Clientes", icon: UserRoundCheck },
+];
